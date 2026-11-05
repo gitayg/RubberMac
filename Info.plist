@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>RubberMAC</string>
+	<key>CFBundleExecutable</key>
+	<string>ScreenTools</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>app.rubbermac.RubberMAC</string>
+	<key>CFBundleName</key>
+	<string>RubberMAC</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.20.0</string>
+	<key>CFBundleVersion</key>
+	<string>27</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>When you paste a folder's path in Finder, RubberMAC moves the Finder window to that folder.</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+</dict>
+</plist>
