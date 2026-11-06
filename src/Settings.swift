@@ -180,6 +180,12 @@ enum Settings {
         set { defaults.set(newValue, forKey: "finderAddressBarEnabled") }
     }
 
+    // Whether RubberMAC has asked for Screen Recording yet: it asks by itself only once.
+    static var screenRecordingAsked: Bool {
+        get { defaults.bool(forKey: "screenRecordingAsked") }
+        set { defaults.set(newValue, forKey: "screenRecordingAsked") }
+    }
+
     static var fullScreenDockEnabled: Bool {
         get { defaults.bool(forKey: "fullScreenDockEnabled") }
         set { defaults.set(newValue, forKey: "fullScreenDockEnabled") }

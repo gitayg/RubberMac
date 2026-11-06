@@ -30,8 +30,8 @@ Needs macOS 14 or later.
 
 1. Download `RubberMAC-<version>.dmg` from [Releases](../../releases), open it and drag RubberMAC to Applications.
 2. Open RubberMAC. It lives in the menu bar, with no Dock icon.
-3. Allow it under System Settings → Privacy & Security → Accessibility. The keyboard, window and Dock features need it.
-4. Optional: Screen Recording for window pictures in Alt-Tab and the Dock menu (and the screen text the writing pad reads); Apple Intelligence for the writing pad's fixes.
+3. It says why it needs Accessibility, then macOS asks: allow it under System Settings → Privacy & Security → Accessibility. The keyboard, window and Dock features need it.
+4. Next it asks for Screen Recording, which is optional: it adds window pictures to Alt-Tab and the Dock menu, and the screen text the writing pad reads. Not Now leaves it for later, in the RubberMAC menu. Apple Intelligence is what the writing pad's fixes need.
 
 Everything runs on the Mac. Its only network traffic is checking GitHub for updates and downloading them.
 
@@ -97,6 +97,7 @@ open -n --stdout /tmp/st.txt "$HOME/Applications/RubberMAC.app" --args --selftes
 | `tap` | whether a busy main thread holds up keys: posts an F18 of its own (swallowed, so no app sees it) while the main thread sleeps 0.4 s, with the tap on the main thread and then on its own |
 | `previews` | the saved focus order (kept within a boot, dropped after one); that every open window the switcher lists has a place on a screen; that a click anywhere on a tile (picture, title, map) picks that window; draws the switcher off screen with made-up windows and pictures to a PNG (path as the next argument); with Screen Recording, takes a picture of every listed window and reports counts and timing |
 | `previews-fullscreen` | three striped windows of its own, each put in full screen over the one before: ScreenCaptureKit alone takes no picture of the first, and the switcher's pictures still have one, with the stripes, no bigger than the switcher shows it; the second asks not to be captured and gets none. Takes them out of full screen and closes them. Switches Spaces, so run it hands-off; skipped while the screen is locked or a full-screen app's desktop is showing |
+| `permissions` | when RubberMAC asks for Screen Recording by itself (once, after Accessibility, not if it has it), and that each message says why and offers Not Now. Shows nothing |
 | `update-trust` | which downloads the update check accepts: a copy of this app passes, and one that was altered or signed ad hoc doesn't, nor does any app whose path follows (say, one for another bundle ID). Needs no permission or network |
 | `pad` | the writing pad end to end in a scratch TextEdit document, typing real keys: fix, ↩, ⌥↩, ⇧↩, Esc; closes the scratch document and puts the clipboard back. Stops if anything else takes the focus, so don't type while it runs |
 | `camera` | the marked camera spot on each screen, and where ⌘↑/←/→ would put a window there (moves nothing) |

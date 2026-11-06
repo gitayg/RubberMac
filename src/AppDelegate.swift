@@ -77,7 +77,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let hardware = brightness.displays.filter(\.hardware).count
             log("brightness: \(brightness.displays.count) screens, \(hardware) on DDC, the rest software")
         }
-        if needsAccess { AX.requestAccess() }
+        // After launch has finished, since the question waits for an answer.
+        DispatchQueue.main.async { [weak self] in self?.askForPermissionsDue() }
         if Settings.writingPadEnabled && ScreenText.hasPermission { ScreenText.warmUp() }
         updater.start()
 
@@ -89,6 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 self?.mouseTap.update()
                 self?.pointerTap.update()
                 self?.finderBar.refresh(.window)
+                self?.askForScreenRecordingIfDue()
             }
         }
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification,
@@ -443,8 +445,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     // The request puts RubberMAC in the list; the switch itself is only in System Settings.
     @objc private func allowScreenReading() {
+        Settings.screenRecordingAsked = true
+        guard PermissionRequest.screenRecording.ask() else { return }
         ScreenText.requestPermission()
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+    }
+
+    private func askForPermissionsDue() {
+        if needsAccess {
+            if PermissionRequest.accessibility.ask() { AX.requestAccess() }
+        } else {
+            askForScreenRecordingIfDue()
+        }
+    }
+
+    // Once, unprompted, and after Accessibility so that the two questions don't pile up. The menu still offers it.
+    private func askForScreenRecordingIfDue() {
+        guard PermissionRequest.screenRecordingDue(hasPermission: ScreenText.hasPermission,
+                                                   alreadyAsked: Settings.screenRecordingAsked,
+                                                   accessibilityDone: !needsAccess) else { return }
+        allowScreenReading()
     }
 
     @objc private func openReplies() {
@@ -468,7 +488,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func grantAccess() {
-        AX.requestAccess()
+        if PermissionRequest.accessibility.ask() { AX.requestAccess() }
     }
 
     @objc private func checkForUpdates() {

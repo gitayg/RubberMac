@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.21.0
+- **RubberMAC says why before it asks for a permission.** A short message explains what Accessibility and Screen Recording are for and what happens without them, with **Not Now** beside **Continue**, before macOS shows its own prompt.
+- **It asks for Screen Recording by itself, once.** Right after Accessibility is allowed, or at launch if it already is, so window pictures no longer depend on finding the menu item. The menu still offers it afterwards.
+
 ## 1.20.0
 - **A new app ID, `app.rubbermac.RubberMAC`.** macOS sees this as a new app, so Accessibility and Screen Recording have to be allowed once more, and an earlier copy doesn't update itself to this version: install it from the DMG.
 - **Updates come from this repo's releases**, which hold a zip for the updater and a DMG for installing by hand.
