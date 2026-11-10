@@ -17,6 +17,23 @@ final class EyeCamera {
     }
 
     static let strengths = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+
+    /// camrelay's colour names (camrelay/eyes.py COLORS) as RGB 0...1, for the menu-bar dot.
+    static let palette: [String: (Double, Double, Double)] = {
+        let bytes: [String: (Double, Double, Double)] = [
+            "blue": (40, 110, 230), "lightblue": (110, 170, 240), "green": (40, 160, 80), "hazel": (140, 120, 50),
+            "gray": (140, 150, 160), "violet": (140, 70, 200), "red": (200, 30, 40),
+        ]
+        return bytes.mapValues { ($0.0 / 255, $0.1 / 255, $0.2 / 255) }
+    }()
+
+    /// RGB for a colour name or a "#rrggbb" value.
+    static func rgb(for name: String) -> (Double, Double, Double)? {
+        if let known = palette[name.lowercased()] { return known }
+        let hex = name.hasPrefix("#") ? String(name.dropFirst()) : name
+        guard hex.count == 6, let value = Int(hex, radix: 16) else { return nil }
+        return (Double((value >> 16) & 0xFF) / 255, Double((value >> 8) & 0xFF) / 255, Double(value & 0xFF) / 255)
+    }
     static let projectURL = URL(string: "https://github.com/gitayg/camrelay")!
 
     private(set) var state: State = .off

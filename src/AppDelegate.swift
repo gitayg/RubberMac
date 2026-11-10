@@ -36,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let writing = WritingAssistant()
     private let eyeCamera = EyeCamera()
     private var statusItem: NSStatusItem!
+    private var iconEyeColor: String?
     private var sliders: [BrightnessSliderView] = []
 
     init(lockWarning: LockWarning) {
@@ -45,6 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = StatusIcon.image()
+        eyeCamera.onChange = { [weak self] in self?.updateStatusIcon() }
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
@@ -99,6 +101,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                                object: nil, queue: .main) { [weak self] _ in
             self?.brightness.refresh {}
         }
+    }
+
+    /// Shows the eye colour as a dot on the menu-bar icon while the Eye Color Camera is on.
+    private func updateStatusIcon() {
+        let shown = eyeCamera.isOn ? eyeCamera.color : nil
+        guard shown != iconEyeColor else { return }
+        iconEyeColor = shown
+        let color = shown.flatMap(EyeCamera.rgb(for:)).map { NSColor(srgbRed: $0.0, green: $0.1, blue: $0.2, alpha: 1) }
+        statusItem.button?.image = StatusIcon.image(eyeColor: color)
     }
 
     func applicationWillTerminate(_ notification: Notification) {

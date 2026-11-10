@@ -2,17 +2,33 @@ import AppKit
 
 /// Menu-bar glyph: the app icon's display, left half lit (a snapped window), a clock in
 /// the right half. Drawn per backing scale so 1x and 2x both land on whole pixels.
+/// While the Eye Color Camera is on, a dot in the eye colour sits in the bottom-right corner.
 enum StatusIcon {
-    static func image() -> NSImage {
+    static func image(eyeColor: NSColor? = nil) -> NSImage {
         let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             let t = ctx.userSpaceToDeviceSpaceTransform
-            draw(in: ctx, layout: hypot(t.a, t.b) >= 1.5 ? .retina : .standard)
+            // A coloured dot can't be a template image, so then the glyph takes the menu bar's text
+            // colour itself (resolved here, at draw time, for a light or dark menu bar).
+            draw(in: ctx, layout: hypot(t.a, t.b) >= 1.5 ? .retina : .standard,
+                 glyph: eyeColor == nil ? .black : .labelColor)
+            if let eyeColor { drawDot(in: ctx, color: eyeColor) }
             return true
         }
-        image.isTemplate = true
-        image.accessibilityDescription = "RubberMAC"
+        image.isTemplate = eyeColor == nil
+        image.accessibilityDescription = eyeColor == nil ? "RubberMAC" : "RubberMAC, Eye Color Camera on"
         return image
+    }
+
+    private static func drawDot(in ctx: CGContext, color: NSColor) {
+        let dot = CGRect(x: 11, y: 0, width: 7, height: 7)
+        // Knock a 1-point gap out of the glyph around the dot so it reads on its own.
+        ctx.saveGState()
+        ctx.setBlendMode(.clear)
+        ctx.fillEllipse(in: dot.insetBy(dx: -1, dy: -1))
+        ctx.restoreGState()
+        ctx.setFillColor(color.cgColor)
+        ctx.fillEllipse(in: dot)
     }
 
     private struct Layout {
@@ -41,8 +57,8 @@ enum StatusIcon {
             base: CGRect(x: 5, y: 1, width: 8, height: 1))
     }
 
-    private static func draw(in ctx: CGContext, layout l: Layout) {
-        ctx.setFillColor(NSColor.black.cgColor)
+    private static func draw(in ctx: CGContext, layout l: Layout, glyph: NSColor) {
+        ctx.setFillColor(glyph.cgColor)
 
         let display = CGMutablePath()
         display.addRoundedRect(in: l.frame, cornerWidth: l.frameRadius, cornerHeight: l.frameRadius)
