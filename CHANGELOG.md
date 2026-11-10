@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.22.0
+- **Eye Color Camera.** A new section in the menu recolours your eyes live on video calls, brown to blue or any colour, with [camrelay](https://github.com/gitayg/camrelay). RubberMAC runs camrelay as a helper and sends its picture to the OBS virtual camera: turn it on, then choose **OBS Virtual Camera** in Zoom, Meet or Teams. Colour, strength and the camera (listed by name) are in the menu, **Calibrate…** opens camrelay's guided calibration, and **Turn On When RubberMAC Starts** has it ready at login. It needs camrelay and OBS installed; until then the menu offers **Set Up camrelay…**. The first time it's turned on, macOS asks to let RubberMAC use the camera.
+
 ## 1.21.0
 - **RubberMAC says why before it asks for a permission.** A short message explains what Accessibility and Screen Recording are for and what happens without them, with **Not Now** beside **Continue**, before macOS shows its own prompt.
 - **It asks for Screen Recording by itself, once.** Right after Accessibility is allowed, or at launch if it already is, so window pictures no longer depend on finding the menu item. The menu still offers it afterwards.

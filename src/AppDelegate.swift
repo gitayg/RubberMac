@@ -34,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let updater = Updater()
     private let cameraMarker = CameraMarker()
     private let writing = WritingAssistant()
+    private let eyeCamera = EyeCamera()
     private var statusItem: NSStatusItem!
     private var sliders: [BrightnessSliderView] = []
 
@@ -81,6 +82,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         DispatchQueue.main.async { [weak self] in self?.askForPermissionsDue() }
         if Settings.writingPadEnabled && ScreenText.hasPermission { ScreenText.warmUp() }
         updater.start()
+        if Settings.eyeCameraAtLaunch && EyeCamera.python() != nil { eyeCamera.start() }
 
         // Posted when any app's Accessibility permission changes; start the keyboard tap once granted.
         DistributedNotificationCenter.default().addObserver(forName: .init("com.apple.accessibility.api"),
@@ -97,6 +99,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                                                object: nil, queue: .main) { [weak self] _ in
             self?.brightness.refresh {}
         }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        eyeCamera.shutdown()
     }
 
     private var needsAccess: Bool {
@@ -223,6 +229,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.note("A quick wheel click is still a middle click"))
 
         menu.addItem(.separator())
+        menu.addItem(.sectionHeader(title: "Eye Color Camera"))
+        eyeCameraItems().forEach { menu.addItem($0) }
+
+        menu.addItem(.separator())
         menu.addItem(.sectionHeader(title: "Window Layouts"))
         menu.addItem(action("Remember Layout per Monitor Setup", #selector(toggleLayouts), on: Settings.layoutsEnabled))
         menu.addItem(action("Save Layout Now", #selector(saveLayout)))
@@ -262,6 +272,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                               #selector(setSnapGrid(_:)), on: grid == current, tag: index)
             return index > 0 && grid.rows == 1 ? [.separator(), item] : [item]
         }
+    }
+
+    // Recolours your eyes on the virtual camera through camrelay, run as a helper.
+    private func eyeCameraItems() -> [NSMenuItem] {
+        guard EyeCamera.python() != nil else {
+            return [.note("Recolours your eyes live on video calls"),
+                    action("Set Up camrelay…", #selector(openCamrelayProject))]
+        }
+        eyeCamera.prepare()
+        var items: [NSMenuItem] = [action("Recolour My Eyes on the Virtual Camera", #selector(toggleEyeCamera),
+                                          on: eyeCamera.isOn, enabled: !eyeCamera.isCalibrating),
+                                   .note(eyeCamera.statusLine)]
+        if eyeCamera.errorMessage != nil { items.append(action("Show the Whole Error…", #selector(showEyeCameraError))) }
+        items.append(.submenu("Colour: \(eyeCamera.color.capitalized)", eyeCamera.colors.enumerated().map { index, name in
+            action(name.capitalized, #selector(setEyeColor(_:)), on: name == eyeCamera.color, tag: index)
+        }))
+        items.append(.submenu("Strength: \(Int((eyeCamera.strength * 100).rounded()))%",
+                              EyeCamera.strengths.enumerated().map { index, value in
+            action("\(Int((value * 100).rounded()))%", #selector(setEyeStrength(_:)),
+                   on: abs(value - eyeCamera.strength) < 0.025, tag: index)
+        }))
+        var cameras: [NSMenuItem] = eyeCamera.cameras.map { camera -> NSMenuItem in
+            if camera.virtual { return NSMenuItem.note("\(camera.name) (virtual, can't be the input)") }
+            return action(camera.name, #selector(setEyeCamera(_:)), on: camera.index == eyeCamera.cameraIndex, tag: camera.index)
+        }
+        if cameras.isEmpty { cameras = [NSMenuItem.note("Looking for cameras…")] }
+        items.append(.submenu("Camera: \(eyeCamera.cameraName ?? "…")",
+                              cameras + [.separator(), action("Refresh List", #selector(refreshEyeCameras))]))
+        items.append(action("Calibrate…", #selector(calibrateEyeCamera), enabled: !eyeCamera.isCalibrating))
+        items.append(action("Turn On When RubberMAC Starts", #selector(toggleEyeCameraAtLaunch), on: Settings.eyeCameraAtLaunch))
+        items.append(.note("In Zoom, Meet or Teams, choose OBS Virtual Camera"))
+        if EyeCamera.separateAppRunning() {
+            items.append(action("Quit the Separate camrelay App (It Uses the Same Camera)", #selector(quitSeparateCamrelay)))
+        }
+        return items
     }
 
     private func sliderRow(_ view: NSView) -> NSMenuItem {
@@ -471,6 +516,53 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         try? FileManager.default.createDirectory(at: ReplyStore.folder, withIntermediateDirectories: true,
                                                  attributes: [.posixPermissions: 0o700])
         NSWorkspace.shared.open(ReplyStore.folder)
+    }
+
+    @objc private func toggleEyeCamera() {
+        eyeCamera.toggle()
+    }
+
+    @objc private func setEyeColor(_ sender: NSMenuItem) {
+        guard eyeCamera.colors.indices.contains(sender.tag) else { return }
+        eyeCamera.setColor(eyeCamera.colors[sender.tag])
+    }
+
+    @objc private func setEyeStrength(_ sender: NSMenuItem) {
+        guard EyeCamera.strengths.indices.contains(sender.tag) else { return }
+        eyeCamera.setStrength(EyeCamera.strengths[sender.tag])
+    }
+
+    @objc private func setEyeCamera(_ sender: NSMenuItem) {
+        eyeCamera.setCamera(sender.tag)
+    }
+
+    @objc private func refreshEyeCameras() {
+        eyeCamera.refreshCameras()
+    }
+
+    @objc private func calibrateEyeCamera() {
+        eyeCamera.calibrate()
+    }
+
+    @objc private func toggleEyeCameraAtLaunch() {
+        Settings.eyeCameraAtLaunch.toggle()
+    }
+
+    @objc private func showEyeCameraError() {
+        guard let message = eyeCamera.errorMessage else { return }
+        let alert = NSAlert()
+        alert.messageText = "Eye Color Camera"
+        alert.informativeText = message
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
+    }
+
+    @objc private func quitSeparateCamrelay() {
+        EyeCamera.quitSeparateApp()
+    }
+
+    @objc private func openCamrelayProject() {
+        NSWorkspace.shared.open(EyeCamera.projectURL)
     }
 
     @objc private func toggleLayouts() {

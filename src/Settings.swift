@@ -55,6 +55,7 @@ enum Settings {
             "fullScreenDockEnabled": true,
             "finderAddressBarEnabled": true,
             "dockWindowMenuEnabled": true,
+            "eyeCameraAtLaunch": false,
         ])
         // 1.2.0 stored an on/off flag; keep a user's "off".
         if defaults.object(forKey: "altTabEnabled") != nil {
@@ -213,6 +214,11 @@ enum Settings {
         sysctlbyname("kern.boottime", &boot, &size, nil, 0)
         return boot.tv_sec
     }()
+
+    static var eyeCameraAtLaunch: Bool {
+        get { defaults.bool(forKey: "eyeCameraAtLaunch") }
+        set { defaults.set(newValue, forKey: "eyeCameraAtLaunch") }
+    }
 
     static var cameraAvoid: Bool {
         get { defaults.bool(forKey: "cameraAvoid") }
