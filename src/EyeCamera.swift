@@ -35,6 +35,7 @@ final class EyeCamera {
         return (Double((value >> 16) & 0xFF) / 255, Double((value >> 8) & 0xFF) / 255, Double(value & 0xFF) / 255)
     }
     static let projectURL = URL(string: "https://github.com/gitayg/camrelay")!
+    static let outdatedMessage = "camrelay is too old for RubberMAC: update it (git pull in its folder, e.g. ~/camrelay)"
 
     private(set) var state: State = .off
     private(set) var device: String?
@@ -336,6 +337,8 @@ final class EyeCamera {
         buffer.removeAll()
         if quitting {
             state = .off
+        } else if stderrTail.contains(where: { $0.contains("unrecognized arguments: --control") }) {
+            state = .error(Self.outdatedMessage)
         } else {
             let detail = stderrTail.last ?? "exit code \(process.terminationStatus)"
             state = .error("camrelay stopped: \(detail)")
@@ -374,6 +377,7 @@ final class EyeCamera {
             .joined(separator: ", "))
         lines.append("state: \(camera.statusLine)")
         let errorText = String(decoding: errors, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+        if errorText.contains("unrecognized arguments: --control") { lines.append(outdatedMessage) }
         if !errorText.isEmpty { lines.append("stderr:\n" + errorText.split(separator: "\n").suffix(10).joined(separator: "\n")) }
         let ok = process.terminationStatus == 0 && !camera.cameras.isEmpty
         lines.append(ok ? "PASS" : "FAIL")
