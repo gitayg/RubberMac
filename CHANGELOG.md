@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.25.0
+- **Real eye colours for the Eye Color Camera.** The colours are now natural eye tones instead of crayon colours: Blue, Ice Blue, Deep Blue, Blue Green, Green, Gray, Hazel, Amber and Brown. Real irises are muted, so the old bright blue looked painted on. Each tone is set by published iris measurements where they exist (ice blue, hazel, brown) and estimated from them otherwise, with famous eyes as a reference: Paul Newman's ice blue, Elizabeth Taylor's deep blue, Tyra Banks's hazel. They need camrelay 0.2; a colour chosen before (Light Blue, Violet) carries over to the nearest tone.
+- **The colour dot on the menu-bar icon has a ring**, so a dark brown dot shows on a dark menu bar and a pale blue one on a light menu bar.
+
 ## 1.24.0
 - **A preview on the Eye Color Camera page.** While it's on and the page is open, the page shows what others see on the call: the picture from OBS Virtual Camera, with your eyes recoloured and not mirrored, so a change of colour or strength shows straight away. It reads only the virtual camera, never your real one, and stops when you leave the page. The first time, **See What Others See** lets macOS ask for the camera permission.
 

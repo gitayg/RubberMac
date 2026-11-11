@@ -29,6 +29,11 @@ enum StatusIcon {
         ctx.restoreGState()
         ctx.setFillColor(color.cgColor)
         ctx.fillEllipse(in: dot)
+        // Real eye colours are muted, so a ring in the menu bar's text colour keeps a dark brown or a pale blue dot
+        // visible on either bar.
+        ctx.setStrokeColor(NSColor.labelColor.withAlphaComponent(0.6).cgColor)
+        ctx.setLineWidth(1)
+        ctx.strokeEllipse(in: dot.insetBy(dx: 0.5, dy: 0.5))
     }
 
     private struct Layout {

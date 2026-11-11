@@ -383,8 +383,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // macOS asks once; the answer starts the preview or leaves the button to open System Settings.
     @objc func showEyePreview() {
-        AVCaptureDevice.requestAccess(for: .video) { _ in
-            DispatchQueue.main.async { [weak self] in
+        AVCaptureDevice.requestAccess(for: .video) { [weak self] _ in
+            DispatchQueue.main.async {
                 self?.settingsPanel.reloadIfShown()
                 self?.updateEyePreview()
             }

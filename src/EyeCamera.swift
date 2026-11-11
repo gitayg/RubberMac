@@ -18,14 +18,21 @@ final class EyeCamera {
 
     static let strengths = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
-    /// camrelay's colour names (camrelay/eyes.py COLORS) as RGB 0...1, for the menu-bar dot.
+    /// camrelay's colour names (camrelay/eyes.py COLORS, real eye colours) as RGB 0...1, for the menu-bar dot, with
+    /// the names camrelay 0.1 used (its ALIASES) so an older camrelay still gets a dot.
     static let palette: [String: (Double, Double, Double)] = {
-        let bytes: [String: (Double, Double, Double)] = [
-            "blue": (40, 110, 230), "lightblue": (110, 170, 240), "green": (40, 160, 80), "hazel": (140, 120, 50),
-            "gray": (140, 150, 160), "violet": (140, 70, 200), "red": (200, 30, 40),
+        var bytes: [String: (Double, Double, Double)] = [
+            "blue": (114, 149, 172), "ice-blue": (170, 191, 210), "deep-blue": (67, 102, 135), "blue-green": (97, 139, 140),
+            "green": (104, 119, 83), "gray": (123, 134, 135), "hazel": (101, 71, 31), "amber": (141, 98, 50),
+            "brown": (72, 41, 32),
         ]
+        bytes["lightblue"] = bytes["ice-blue"]
+        bytes["violet"] = bytes["deep-blue"]
         return bytes.mapValues { ($0.0 / 255, $0.1 / 255, $0.2 / 255) }
     }()
+
+    /// A colour name as people read it: "ice-blue" is "Ice Blue".
+    static func title(for name: String) -> String { name.replacingOccurrences(of: "-", with: " ").capitalized }
 
     /// RGB for a colour name or a "#rrggbb" value.
     static func rgb(for name: String) -> (Double, Double, Double)? {
@@ -41,7 +48,7 @@ final class EyeCamera {
     private(set) var device: String?
     private(set) var fps = 0
     private(set) var cameras: [Camera] = []
-    private(set) var colors = ["blue", "lightblue", "green", "hazel", "gray", "violet", "red"]
+    private(set) var colors = ["blue", "ice-blue", "deep-blue", "blue-green", "green", "gray", "hazel", "amber", "brown"]
     private(set) var color = "blue"
     private(set) var strength = 0.6
     private(set) var cameraIndex = 0
@@ -376,10 +383,14 @@ final class EyeCamera {
         lines.append("cameras: " + camera.cameras.map { "[\($0.index)] \($0.name)\($0.virtual ? " (virtual)" : "")" }
             .joined(separator: ", "))
         lines.append("state: \(camera.statusLine)")
+        // RubberMAC keeps its own copy of camrelay's colours for the menu-bar dot; this says when they drift apart.
+        let undotted = camera.colors.filter { rgb(for: $0) == nil }
+        lines.append("colours: " + camera.colors.map(title(for:)).joined(separator: ", ")
+            + (undotted.isEmpty ? "" : "; FAIL no menu-bar dot for \(undotted.joined(separator: ", "))"))
         let errorText = String(decoding: errors, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         if errorText.contains("unrecognized arguments: --control") { lines.append(outdatedMessage) }
         if !errorText.isEmpty { lines.append("stderr:\n" + errorText.split(separator: "\n").suffix(10).joined(separator: "\n")) }
-        let ok = process.terminationStatus == 0 && !camera.cameras.isEmpty
+        let ok = process.terminationStatus == 0 && !camera.cameras.isEmpty && undotted.isEmpty
         lines.append(ok ? "PASS" : "FAIL")
         return lines.joined(separator: "\n")
     }

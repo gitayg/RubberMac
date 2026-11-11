@@ -330,7 +330,7 @@ extension AppDelegate {
             if eye.hasError { rows.append(button("Show the Whole Error…", "Show", #selector(showEyeCameraError), closes: true)) }
             rows += eyePreviewRows(eye)
             rows.append(popup("Colour", eye.colors.enumerated().map { index, name in
-                action(name.capitalized, #selector(setEyeColor(_:)), on: name == eye.color, tag: index)
+                action(EyeCamera.title(for: name), #selector(setEyeColor(_:)), on: name == eye.color, tag: index)
             }))
             rows.append(popup("Strength", EyeCamera.strengths.enumerated().map { index, value in
                 action("\(Int((value * 100).rounded()))%", #selector(setEyeStrength(_:)), on: abs(value - eye.strength) < 0.025, tag: index)
