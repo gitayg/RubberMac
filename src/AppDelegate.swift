@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import Carbon.HIToolbox
 import ServiceManagement
 
@@ -36,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let cameraMarker = CameraMarker()
     private let writing = WritingAssistant()
     let eyeCamera = EyeCamera()
+    let eyePreview = EyePreview()
     private var iconEyeColor: String?
     var statusItem: NSStatusItem!
     var sliders: [BrightnessSliderView] = []
@@ -64,6 +66,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         setUpSettingsPanel()
         eyeCamera.onChange = { [weak self] in
             self?.updateStatusIcon()
+            self?.updateEyePreview()
+            if self?.settingsPanel.shown == Self.eyeCameraPageID { self?.settingsPanel.reloadIfShown() }
+        }
+        eyePreview.onChange = { [weak self] in
             if self?.settingsPanel.shown == Self.eyeCameraPageID { self?.settingsPanel.reloadIfShown() }
         }
 
@@ -373,6 +379,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.informativeText = message
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
+    }
+
+    // macOS asks once; the answer starts the preview or leaves the button to open System Settings.
+    @objc func showEyePreview() {
+        AVCaptureDevice.requestAccess(for: .video) { _ in
+            DispatchQueue.main.async { [weak self] in
+                self?.settingsPanel.reloadIfShown()
+                self?.updateEyePreview()
+            }
+        }
+    }
+
+    @objc func allowEyePreviewCamera() {
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera")!)
     }
 
     @objc func quitSeparateCamrelay() {

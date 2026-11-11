@@ -15,15 +15,15 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.23.0</string>
+	<string>1.24.0</string>
 	<key>CFBundleVersion</key>
-	<string>30</string>
+	<string>31</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>27.0</string>
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>The Eye Color Camera reads your camera to recolour your eyes and sends the picture to the virtual camera.</string>
+	<string>The Eye Color Camera reads your camera to recolour your eyes and sends the picture to the virtual camera, and shows you that picture as a preview.</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>When you paste a folder's path in Finder, RubberMAC moves the Finder window to that folder.</string>
 	<key>NSHighResolutionCapable</key>

@@ -38,6 +38,10 @@ struct EyeFacts {
     var cameras: [EyeCamera.Camera] = []
     var cameraIndex = 0
     var separateApp = false
+    // On with a picture going to the virtual camera, which is what the preview shows.
+    var isStreaming = false
+    var previewAccess = EyePreview.Access.allowed
+    var previewProblem: String?
 }
 
 extension AppDelegate {
@@ -50,9 +54,11 @@ extension AppDelegate {
         settingsPanel.start(on: Settings.settingsPage)
         settingsPanel.onChoosePage = { Settings.settingsPage = $0 }
         settingsPanel.onOpen = { [weak self] in self?.refreshBrightnessRows() }
+        settingsPanel.onClose = { [weak self] in self?.updateEyePreview() }
         settingsPanel.onShowPage = { [weak self] id in
             if id == Self.permissionsPageID { self?.readPermissions(logAlways: false) }
             if id == Self.eyeCameraPageID { self?.showingEyeCamera() }
+            self?.updateEyePreview()
         }
         updater.onChange = { [weak self] in self?.settingsPanel.reloadIfShown() }
     }
@@ -83,6 +89,13 @@ extension AppDelegate {
         settingsPanel.reloadIfShown()
     }
 
+    // Only while someone can see it: the page open, with a picture going to the virtual camera.
+    func updateEyePreview() {
+        let wanted = settingsPanel.isShown && settingsPanel.shown == Self.eyeCameraPageID && eyeCamera.state == .on
+            && EyePreview.access == .allowed
+        if wanted { eyePreview.start() } else { eyePreview.stop() }
+    }
+
     func currentFacts() -> SettingsFacts {
         var facts = SettingsFacts()
         facts.version = updater.current
@@ -106,7 +119,8 @@ extension AppDelegate {
         facts.eye = EyeFacts(installed: EyeCamera.python() != nil, isOn: eyeCamera.isOn, isCalibrating: eyeCamera.isCalibrating,
                              status: eyeCamera.statusLine, hasError: eyeCamera.errorMessage != nil, colors: eyeCamera.colors,
                              color: eyeCamera.color, strength: eyeCamera.strength, cameras: eyeCamera.cameras,
-                             cameraIndex: eyeCamera.cameraIndex, separateApp: eyeSeparateApp)
+                             cameraIndex: eyeCamera.cameraIndex, separateApp: eyeSeparateApp, isStreaming: eyeCamera.state == .on,
+                             previewAccess: EyePreview.access, previewProblem: eyePreview.problem)
         return facts
     }
 
@@ -314,6 +328,7 @@ extension AppDelegate {
         } else {
             rows = [toggle("Recolour My Eyes on the Virtual Camera", #selector(toggleEyeCamera), on: eye.isOn, note: eye.status)]
             if eye.hasError { rows.append(button("Show the Whole Error…", "Show", #selector(showEyeCameraError), closes: true)) }
+            rows += eyePreviewRows(eye)
             rows.append(popup("Colour", eye.colors.enumerated().map { index, name in
                 action(name.capitalized, #selector(setEyeColor(_:)), on: name == eye.color, tag: index)
             }))
@@ -336,6 +351,20 @@ extension AppDelegate {
         }
         return SettingsPage(id: Self.eyeCameraPageID, title: "Eye Color Camera", symbol: "eye.fill", tint: .systemCyan,
                             sections: [SettingsSection(title: nil, rows: rows)])
+    }
+
+    private func eyePreviewRows(_ eye: EyeFacts) -> [SettingsRow] {
+        guard eye.isStreaming else { return [.note("Turn it on to see a preview of what others see")] }
+        switch eye.previewAccess {
+        case .allowed:
+            if let problem = eye.previewProblem { return [.note(problem)] }
+            return [SettingsRow(title: "Preview", note: nil, control: .custom(eyePreview.view)),
+                    .note("What others see on the call, from OBS Virtual Camera")]
+        case .notAsked:
+            return [button("See What Others See", "Show", #selector(showEyePreview), note: "macOS asks once to let RubberMAC use the camera")]
+        case .denied:
+            return [button("Allow the Camera for the Preview…", "Open", #selector(allowEyePreviewCamera), closes: true)]
+        }
     }
 
     // MARK: Rows

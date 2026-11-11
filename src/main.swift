@@ -26,7 +26,7 @@ Settings.register()
 
 let app = NSApplication.shared
 
-// --selftest ddc|windows|switch|previews|previews-fullscreen|pad|padkeys|finder|finder-bar|finder-trash|tap|dock|dockmenu|dockmenu-ui|usage|camera|layouts|input|mouse|update|update-install|update-trust|permissions|eyecamera|settings|settings-live prints a diagnostic report and exits (run inside the
+// --selftest ddc|windows|switch|previews|previews-fullscreen|pad|padkeys|finder|finder-bar|finder-trash|tap|dock|dockmenu|dockmenu-ui|usage|camera|layouts|input|mouse|update|update-install|update-trust|permissions|eyecamera|eyepreview|settings|settings-live prints a diagnostic report and exits (run inside the
 // signed app so Accessibility applies: open -n --stdout <file> "RubberMAC.app" --args --selftest windows).
 if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     switch args[i + 1] {
@@ -39,6 +39,7 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "previews-fullscreen": print(WindowThumbnails.fullScreenSelfTestReport())
     case "pad": print(WritingAssistant.selfTestReport())
     case "eyecamera": print(EyeCamera.selfTestReport())
+    case "eyepreview": print(EyePreview.selfTestReport())
     case "finder": print(FinderPathPaste.selfTestReport())
     case "finder-bar": print(FinderAddressBar.selfTestReport())
     case "finder-trash": print(FinderTrashKey.selfTestReport())

@@ -190,6 +190,12 @@ extension SettingsPanel {
         conditional("OBS Virtual Camera (virtual, can't be the input)") { $0.eye.installed = true; $0.eye.cameras = cameras }
         conditional("Show the Whole Error…") { $0.eye.installed = true; $0.eye.hasError = true }
         conditional("Quit the Separate camrelay App (It Uses the Same Camera)") { $0.eye.installed = true; $0.eye.separateApp = true }
+        conditional("Turn it on to see a preview of what others see") { $0.eye.installed = true }
+        conditional("Preview") { $0.eye.installed = true; $0.eye.isStreaming = true }
+        conditional("What others see on the call, from OBS Virtual Camera") { $0.eye.installed = true; $0.eye.isStreaming = true }
+        conditional("No preview: OBS Virtual Camera isn't there") { $0.eye.installed = true; $0.eye.isStreaming = true; $0.eye.previewProblem = "No preview: OBS Virtual Camera isn't there" }
+        conditional("See What Others See") { $0.eye.installed = true; $0.eye.isStreaming = true; $0.eye.previewAccess = .notAsked }
+        conditional("Allow the Camera for the Preview…") { $0.eye.installed = true; $0.eye.isStreaming = true; $0.eye.previewAccess = .denied }
 
         // "Grant Accessibility Access…" asked the same question Turn On… now does, on the Permissions page.
         var noAccess = base()
@@ -224,7 +230,8 @@ extension SettingsPanel {
         everything.camera = CameraArea(display: "1:2:3", name: "Test", box: CGRect(x: 10, y: 10, width: 10, height: 10), on: CGRect(x: 0, y: 0, width: 100, height: 100))
         everything.permissions = PermissionCheck(accessibility: false, screenRecording: false, finder: .off, finderUsed: true)
         everything.eye = EyeFacts(installed: true, hasError: true,
-                                  cameras: [EyeCamera.Camera(index: 0, name: "Test Camera", virtual: false)], separateApp: true)
+                                  cameras: [EyeCamera.Camera(index: 0, name: "Test Camera", virtual: false)], separateApp: true,
+                                  isStreaming: true, previewAccess: .notAsked)
 
         for (name, pages) in [("real", delegate.settingsPages()), ("every conditional row", delegate.settingsPages(everything))] {
             var checked = 0

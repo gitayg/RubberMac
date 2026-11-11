@@ -13,6 +13,7 @@ final class SettingsPanel: NSObject, NSPopoverDelegate, NSSearchFieldDelegate {
     var onChoosePage: (String) -> Void = { _ in }
     var onShowPage: (String) -> Void = { _ in }
     var onOpen: () -> Void = {}
+    var onClose: () -> Void = {}
 
     let root = SettingsRootView(frame: NSRect(origin: .zero, size: size))
     private(set) lazy var sidebar = SettingsSidebar(frame: NSRect(x: 0, y: 0, width: Self.sidebarWidth, height: Self.size.height))
@@ -105,6 +106,7 @@ final class SettingsPanel: NSObject, NSPopoverDelegate, NSSearchFieldDelegate {
     }
 
     func popoverDidClose(_ notification: Notification) {
+        onClose()
         // Esc, ⌘W or the icon leave RubberMAC in front with nothing to show for it; the app the user was in comes back.
         if returnsFocus, NSApp.isActive, previous != NSRunningApplication.current { previous?.activate() }
     }

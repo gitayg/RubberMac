@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.24.0
+- **A preview on the Eye Color Camera page.** While it's on and the page is open, the page shows what others see on the call: the picture from OBS Virtual Camera, with your eyes recoloured and not mirrored, so a change of colour or strength shows straight away. It reads only the virtual camera, never your real one, and stops when you leave the page. The first time, **See What Others See** lets macOS ask for the camera permission.
+
 ## 1.23.0
 - **A settings panel instead of the long menu.** Clicking the menu-bar icon now drops down a panel like System Settings: pages in a sidebar (General, Screen Saver, Brightness, Windows, Keyboard, Writing, Eye Color Camera, Mouse, Window Layouts, Permissions), and that page's settings as cards on the right, with switches, popups and buttons. Everything the menu did is on a page, and Quit RubberMAC is at the bottom of the sidebar.
 - **Search.** ⌘F and type: the sidebar keeps the pages with a match and each page shows only the settings that match. ↑/↓ move between pages, Esc and ⌘W close it, and it opens on the page you last looked at.
