@@ -99,7 +99,7 @@ final class SwitcherPanel {
 
         if hint > 0 {
             let label = NSTextField(labelWithString: "To see what's in each window, allow Screen Recording: "
-                                    + "RubberMAC menu → Show Window Pictures in the Switcher…")
+                                    + "RubberMAC → Keyboard → Show Window Pictures in the Switcher…")
             label.font = .systemFont(ofSize: 12)
             label.textColor = NSColor.white.withAlphaComponent(0.75)
             label.alignment = .center

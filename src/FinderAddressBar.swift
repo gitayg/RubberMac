@@ -10,7 +10,7 @@ final class FinderAddressBar {
     var isEnabled = false {
         didSet { if isEnabled != oldValue { isEnabled ? start() : stop() } }
     }
-    // Set once Finder has said no, so the menu can offer the setting.
+    // Set once Finder has said no, so the panel can offer the setting.
     private(set) var isDenied = false
     private(set) var lastOutcome: FinderPathPaste.Outcome?
 
@@ -39,6 +39,10 @@ final class FinderAddressBar {
     }
 
     deinit { if isEnabled { stop() } }
+
+    func clearDenied() {
+        isDenied = false
+    }
 
     // ↩ in the field: a path goes there, by the same rules as pasting one with ⌘V in Finder.
     func commit() {

@@ -15,7 +15,10 @@ final class WindowKeys: TapHandler {
         guard isEnabled, type == .keyDown || type == .keyUp else { return event }
         let keyCode = Int(event.getIntegerValueField(.keyboardEventKeycode))
         if type == .keyUp { return swallowedKeyUps.remove(keyCode) == nil ? event : nil }
-        guard let command = Self.command(keyCode: keyCode, flags: event.flags.rawValue, keys: keys) else { return event }
+        // RubberMAC in front means its own panel, whose search field wants ⌘←/→ and which isn't a window to snap.
+        guard let command = Self.command(keyCode: keyCode, flags: event.flags.rawValue, keys: keys), Frontmost.pid != getpid() else {
+            return event
+        }
         swallowedKeyUps.insert(keyCode)
         // Holding the keys would otherwise fling the window across every screen.
         guard event.getIntegerValueField(.keyboardEventAutorepeat) == 0 else { return nil }

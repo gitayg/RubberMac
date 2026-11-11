@@ -2,21 +2,22 @@
 
 Formerly Screen Tools. The log (`~/Library/Logs/ScreenTools.log`) and the data folders keep the old name.
 
-A macOS menu-bar app (Swift/AppKit, no Xcode project) with Windows habits and display helpers:
+A macOS menu-bar app (Swift/AppKit, no Xcode project) with Windows habits and display helpers. Clicking its menu-bar icon opens a settings panel with all of it:
 
 - **Big Clock and pre-lock warning:** shows the Big Clock screen saver, warns (and dims the screens) before the screen saver locks.
 - **Brightness:** sliders for each screen (DDC, or software dimming behind a DisplayLink dock), plus ⌃⌥⌘↑/↓.
 - **Window snapping:** ⌘ + arrows snap to a grid you choose (2–4 columns × 1–3 rows), maximize and minimize, and move to the next screen. ⌘M minimizes all windows and ⌘⇧M brings them back.
 - **Dock in full-screen apps:** moving the pointer to the Dock's edge brings it up, without the firm push macOS wants there.
 - **Pick a window from the Dock:** clicking the Dock icon of an app with two or more windows opens a menu of them beside the icon, each with a picture of the window and its title, instead of bringing the whole app forward; clicking one goes to that window, even if it's minimized, hidden or on another desktop. Esc, a click elsewhere or another click on the icon closes it. Apps with one window, ⌘/⌥/⌃/⇧-clicks, right-clicks and dragging icons work as before.
-- **Eye Color Camera:** recolours your eyes live (brown to blue, green, violet…) on video calls. RubberMAC runs [camrelay](https://github.com/gitayg/camrelay) as a helper, which tracks your irises and sends the picture to the OBS virtual camera; pick that camera in Zoom, Meet or Teams. The menu turns it on and off and sets the colour, strength and camera, opens camrelay's calibration, and can turn it on when RubberMAC starts. Needs camrelay installed (its README) and OBS's virtual camera.
+- **Eye Color Camera:** recolours your eyes live (brown to blue, green, violet…) on video calls. RubberMAC runs [camrelay](https://github.com/gitayg/camrelay) as a helper, which tracks your irises and sends the picture to the OBS virtual camera; pick that camera in Zoom, Meet or Teams. Its page in the settings panel turns it on and off and sets the colour, strength and camera, opens camrelay's calibration, and can turn it on when RubberMAC starts. Needs camrelay installed (its README) and OBS's virtual camera.
 - **Camera in front of the screen:** mark where a camera on a stand covers part of a screen, and snapping keeps windows clear of it. A toggle turns this on and off.
 - **PC keyboard habits:**
-  - Alt-Tab switches windows (most recently used first, so a quick Alt-Tab goes back to the previous one; the order survives RubberMAC restarting) or apps. It lists the windows on every desktop and full-screen Space, and of hidden apps; picking one on another Space switches there. It shows a grid of window pictures sized so every window fits on the screen, each with its app icon, title and a small map of where the window is; clicking a tile switches to that window. Pictures need Screen Recording; without it each tile shows the window's place on the screens, with its app icon. In window mode ⌘Tab switches windows too, so each of an app's windows (say, three Teams windows) can be picked; a menu toggle turns that off and gives ⌘Tab back to macOS.
+  - Alt-Tab switches windows (most recently used first, so a quick Alt-Tab goes back to the previous one; the order survives RubberMAC restarting) or apps. It lists the windows on every desktop and full-screen Space, and of hidden apps; picking one on another Space switches there. It shows a grid of window pictures sized so every window fits on the screen, each with its app icon, title and a small map of where the window is; clicking a tile switches to that window. Pictures need Screen Recording; without it each tile shows the window's place on the screens, with its app icon. In window mode ⌘Tab switches windows too, so each of an app's windows (say, three Teams windows) can be picked; a switch on the Keyboard page turns that off and gives ⌘Tab back to macOS.
   - Ctrl-C/X/V/Z copy, cut, paste and undo; Ctrl stays Ctrl in terminals, VS Code and remote desktops.
   - Ctrl-←/→ move by word, and Home/End go to the start and end of the line.
   - Left Alt-Shift switches the input language.
   - Paste a path in Finder (⌘V or Ctrl-V) to go to that folder in the same window, without ⌘⇧G. A file's path goes to its folder and selects it. Plain paths, `~`, `file://` links, quoted paths and terminal-style `My\ Folder` all work. Pasting into a text box in Finder and pasting copied files work as before.
+  - Delete in Finder moves the highlighted file to the Trash (⌘Z puts it back), with either delete key. Renaming, search, the address bar and the writing pad keep their delete key.
   - An address bar under the toolbar of the front Finder window shows the folder's path; paste or type a path there and press ↩ to go to it.
 - **Writing pad:** ⌘⇧Space in Teams, Outlook or any app opens a pad (taken before Siri sees it, so holding it doesn't bring up Siri) to write the reply in. Apple's on-device model fixes it as you type, and ↩ pastes the fixed text where you were typing and leaves it on the clipboard. Each reply is saved with the text of the window it answered, read from the screen.
 - **Mouse:**
@@ -27,12 +28,12 @@ A macOS menu-bar app (Swift/AppKit, no Xcode project) with Windows habits and di
 
 ## Install
 
-Needs macOS 14 or later.
+Needs macOS 27 or later, on a Mac with Apple silicon.
 
 1. Download `RubberMAC-<version>.dmg` from [Releases](../../releases), open it and drag RubberMAC to Applications.
 2. Open RubberMAC. It lives in the menu bar, with no Dock icon.
 3. It says why it needs Accessibility, then macOS asks: allow it under System Settings → Privacy & Security → Accessibility. The keyboard, window and Dock features need it.
-4. Next it asks for Screen Recording, which is optional: it adds window pictures to Alt-Tab and the Dock menu, and the screen text the writing pad reads. Not Now leaves it for later, in the RubberMAC menu. Apple Intelligence is what the writing pad's fixes need.
+4. Next it asks for Screen Recording, which is optional: it adds window pictures to Alt-Tab and the Dock menu, and the screen text the writing pad reads. Not Now leaves it for later, on the Permissions page of the settings panel. Apple Intelligence is what the writing pad's fixes need.
 
 Everything runs on the Mac. Its only network traffic is checking GitHub for updates and downloading them.
 
@@ -90,6 +91,7 @@ open -n --stdout /tmp/st.txt "$HOME/Applications/RubberMAC.app" --args --selftes
 | `switch` | switches between real windows and checks Alt-Tab comes back to the one it left; moves focus, then puts it back |
 | `finder` | which pasted text counts as a path, then a Finder window of scratch folders: a folder path moves that window, a file path selects the file, and the search field, ⌥⌘V, plain text and copied files are left to Finder. Hands ⌘V to the handler rather than typing it, but closes its window with ⌘W, so don't type while it runs. Asks once to let RubberMAC control Finder |
 | `finder-bar` | the Finder address bar's place under the toolbar or tab bar, on any screen, and which typed text counts as a path; with `live` after it, a Finder window of scratch folders: the bar shows the folder's path, ↩ moves the window, and it hides when the window is minimized. Closes its window with ⌘W, so don't type while it runs |
+| `finder-trash` | when Delete counts, then a Finder window of scratch files, handing the delete keys straight to the handler (a tap doesn't see posted keys on this macOS) and posting what it passes on: Delete and ⌫ trash the highlighted file and ⌘Z brings it back; renaming, a RubberMAC panel with the keyboard and holding the key trash nothing more. Presses a delete key only with Finder in front and exactly the scratch file highlighted; removes its files from the Trash, or says it couldn't. Skipped while the screen is locked, a full-screen app's desktop is showing, or the Mac was used in the last 20 s |
 | `padkeys` | which keys the ⌘⇧Space handler takes, then ⌘⇧Space held 0.8 s through a tap of its own (no Siri) and without it (Siri's alert comes up; close it with OK). Opens and closes the pad |
 | `dock` | in a full-screen window of its own, a quick move of the pointer to the bottom edge, without and then with the helper: the Dock stays hidden, then comes up. Moves the pointer, then puts it back |
 | `dockmenu` | which clicks the Dock handler holds back and which it hands on (a drag goes on as the press, then the move); that every running app's Dock icon leads to its app; then with a helper copy of the app (its own Dock icon and three windows): a click without the picker brings the app forward, with it opens the menu of 3 above the icon while the app stays behind, a second click, Esc and a click elsewhere close it, each row shows the app's CPU and memory, a row goes to its window, and with one window left the click reaches the Dock. Brings up the Dock and clicks, then puts the pointer back. Skipped while the screen is locked, a full-screen app's desktop is showing, or RubberMAC is running with its Dock menu on. `nolive` stops after the first part; a folder (ending in `/`) as the last argument saves a picture of the open menu there |
@@ -99,6 +101,8 @@ open -n --stdout /tmp/st.txt "$HOME/Applications/RubberMAC.app" --args --selftes
 | `previews` | the saved focus order (kept within a boot, dropped after one); that every open window the switcher lists has a place on a screen; that a click anywhere on a tile (picture, title, map) picks that window; draws the switcher off screen with made-up windows and pictures to a PNG (path as the next argument); with Screen Recording, takes a picture of every listed window and reports counts and timing |
 | `previews-fullscreen` | three striped windows of its own, each put in full screen over the one before: ScreenCaptureKit alone takes no picture of the first, and the switcher's pictures still have one, with the stripes, no bigger than the switcher shows it; the second asks not to be captured and gets none. Takes them out of full screen and closes them. Switches Spaces, so run it hands-off; skipped while the screen is locked or a full-screen app's desktop is showing |
 | `permissions` | when RubberMAC asks for Screen Recording by itself (once, after Accessibility, not if it has it), and that each message says why and offers Not Now. Shows nothing |
+| `settings` | the settings panel with no permission needed: the Permissions page's words for each state, that every title and note of the old menu is on a page (each conditional one with its condition on and off), that every control's target answers its action (never pressing them; no stored setting changes), and on made-up pages a switch's click, a re-render keeping the page and scroll, search, the empty state and Esc/⌘W/⌘F; draws each page in light and dark to PNGs (folder as the next argument) |
+| `settings-live` | the real panel under a real menu-bar icon: a click opens it, focus lands on the sidebar and the sidebar reaches the screen, ↓ moves the page, the permissions read for real without asking, Esc closes it and gives the front back, and a click on the icon closes it for good. Posts clicks and keys, then puts the pointer back; skipped while the screen is locked, a full-screen app's desktop is showing, or the Mac was used in the last 20 s. A folder as the next argument gets pictures of the panel |
 | `update-trust` | which downloads the update check accepts: a copy of this app passes, and one that was altered or signed ad hoc doesn't, nor does any app whose path follows (say, one for another bundle ID). Needs no permission or network |
 | `pad` | the writing pad end to end in a scratch TextEdit document, typing real keys: fix, ↩, ⌥↩, ⇧↩, Esc; closes the scratch document and puts the clipboard back. Stops if anything else takes the focus, so don't type while it runs |
 | `camera` | the marked camera spot on each screen, and where ⌘↑/←/→ would put a window there (moves nothing) |
@@ -111,6 +115,16 @@ open -n --stdout /tmp/st.txt "$HOME/Applications/RubberMAC.app" --args --selftes
 The keyboard tap runs on a thread of its own, so typing never waits for the main thread (layout saves, Accessibility calls to a slow app). Its handlers decide there and hand any real work to the main queue; they read the frontmost app from `Frontmost`, not NSWorkspace.
 
 Logs go to `~/Library/Logs/ScreenTools.log`. A key that waited more than 50 ms for the keyboard tap is logged as `keyboard tap: a key waited N ms` (never which key), at most once a second.
+
+## Settings panel
+
+- The menu-bar icon opens `SettingsPanel`, a `.transient` `NSPopover`; a click on the icon while it's open closes it. It activates the app so Esc and the search field work, and on closing with the keyboard goes back to the app that was in front.
+- `AppDelegate.settingsPages()` (`SettingsPages.swift`) describes the pages as data (`SettingsPage`, `SettingsSection`, `SettingsRow`), afresh for each render, from the same conditions the menu used. Each row keeps its own `@objc` action; popups show copies of tagged `NSMenuItem`s, so the original arrives as the sender. `SettingsFacts` holds what they depend on besides `Settings`, so the self-test can build them under any condition.
+- `SettingsRowView` draws one row and `SettingsDetailView` the page, in place when the page keeps its shape so a switch's animation isn't cut, and scrolling stays where it was. A re-render waits while a slider is being dragged.
+- A row that takes over the screen, opens elsewhere or asks a question closes the panel first (`closesPanel`).
+- `PermissionCheck` is the Permissions page's words for a reading, with no AppKit in it. Finder's side is read off the main thread (`FinderWindow.permission(ask: false)`), and the log has only `permissions: accessibility on, screen recording off, finder on`.
+- The Eye Color Camera page reads `EyeCamera` through `EyeFacts`. Showing the page starts the camrelay helper (`prepare()`) so the camera list is ready, and checks once for the separate camrelay app; while the page is open, each change the helper reports re-renders it.
+- The panel's window belongs to RubberMAC, which the switcher, the Dock menu and saved layouts all leave out by process (and by `.regular` activation policy).
 
 ## Window switcher pictures
 
@@ -141,7 +155,7 @@ Logs go to `~/Library/Logs/ScreenTools.log`. A key that waited more than 50 ms f
 
 - `FinderPathPaste` is a keyboard-tap handler after `ClipboardKeys`, so Ctrl-V reaches it as ⌘V. It takes the ⌘V only when Finder is frontmost, the clipboard holds text (not copied files) naming something that exists, and Finder's focused element isn't a text box.
 - `FinderWindow` moves the front Finder window with Apple Events (`set target of Finder window 1`, then `select` for a file), off the main thread. Under the hardened runtime this needs the `com.apple.security.automation.apple-events` entitlement (`ScreenTools.entitlements`, passed to `codesign` by `build.sh` and `release.sh`) and the user's one-time OK to control Finder, asked on the first paste.
-- With the desktop in front instead of a folder window, or without that OK, the path opens in a new Finder window. Once the OK is refused, the menu offers the Automation settings.
+- With the desktop in front instead of a folder window, or without that OK, the path opens in a new Finder window. Once the OK is refused, the Keyboard page offers the Automation settings.
 - The log records which of these happened, never the path.
 - `FinderAddressBar` puts a non-activating panel under the front Finder window's toolbar (or tab bar), kept just above that window and hidden when Finder isn't in front. It reads the folder with `FinderWindow.currentFolder()` and follows the window with an AXObserver. ↩ goes by the same rules as a pasted path.
 

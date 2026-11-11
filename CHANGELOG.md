@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.23.0
+- **A settings panel instead of the long menu.** Clicking the menu-bar icon now drops down a panel like System Settings: pages in a sidebar (General, Screen Saver, Brightness, Windows, Keyboard, Writing, Eye Color Camera, Mouse, Window Layouts, Permissions), and that page's settings as cards on the right, with switches, popups and buttons. Everything the menu did is on a page, and Quit RubberMAC is at the bottom of the sidebar.
+- **Search.** ⌘F and type: the sidebar keeps the pages with a match and each page shows only the settings that match. ↑/↓ move between pages, Esc and ⌘W close it, and it opens on the page you last looked at.
+- **A Permissions page.** It says whether Accessibility, Screen Recording and control of Finder are on, what each is for and what's lost without it, with a **Turn On…** button for the ones that are off. **Check Again** reads them afresh and restarts what was waiting for them, and a dot on the page in the sidebar says when Accessibility is needed. Reading a permission never asks for it.
+- **Delete in Finder moves the highlighted file to the Trash**, as on a PC, with either delete key; ⌘Z puts it back. Renaming, search, the address bar and the writing pad keep their delete key. **Delete Moves the Highlighted File to the Trash** on the Keyboard page turns it off.
+- **Needs macOS 27 or later, on a Mac with Apple silicon.** Earlier versions said macOS 14, but the builds are marked for macOS 27 and made for Apple silicon only; the app now says so, so an older Mac is told before it opens.
+- **The Eye Color Camera is a page in the panel**, with its colour, strength and camera as popups and the camera's state under its switch, kept up to date while the page is open.
+
 ## 1.22.0
 - **Eye Color Camera.** A new section in the menu recolours your eyes live on video calls, brown to blue or any colour, with [camrelay](https://github.com/gitayg/camrelay). RubberMAC runs camrelay as a helper and sends its picture to the OBS virtual camera: turn it on, then choose **OBS Virtual Camera** in Zoom, Meet or Teams. Colour, strength and the camera (listed by name) are in the menu, **Calibrate…** opens camrelay's guided calibration, and **Turn On When RubberMAC Starts** has it ready at login. It needs camrelay and OBS installed; until then the menu offers **Set Up camrelay…**. The first time it's turned on, macOS asks to let RubberMAC use the camera.
 - **The menu-bar icon shows the eye colour.** While the Eye Color Camera is on, a dot in the colour you chose sits in the corner of RubberMAC's icon, so you can see at a glance that your eyes are being recoloured, and in which colour.

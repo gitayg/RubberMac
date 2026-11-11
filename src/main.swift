@@ -26,7 +26,7 @@ Settings.register()
 
 let app = NSApplication.shared
 
-// --selftest ddc|windows|switch|previews|previews-fullscreen|pad|padkeys|finder|finder-bar|tap|dock|dockmenu|dockmenu-ui|usage|camera|layouts|input|mouse|update|update-install|update-trust|permissions|eyecamera prints a diagnostic report and exits (run inside the
+// --selftest ddc|windows|switch|previews|previews-fullscreen|pad|padkeys|finder|finder-bar|finder-trash|tap|dock|dockmenu|dockmenu-ui|usage|camera|layouts|input|mouse|update|update-install|update-trust|permissions|eyecamera|settings|settings-live prints a diagnostic report and exits (run inside the
 // signed app so Accessibility applies: open -n --stdout <file> "RubberMAC.app" --args --selftest windows).
 if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     switch args[i + 1] {
@@ -41,6 +41,7 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "eyecamera": print(EyeCamera.selfTestReport())
     case "finder": print(FinderPathPaste.selfTestReport())
     case "finder-bar": print(FinderAddressBar.selfTestReport())
+    case "finder-trash": print(FinderTrashKey.selfTestReport())
     case "tap": print(EventTap.selfTestReport())
     case "dock": print(FullScreenDock.selfTestReport())
     case "dockmenu": print(DockWindowPicker.selfTestReport())
@@ -55,6 +56,19 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "input": print(InputSources.selfTestReport())
     case "mouse": print(PointerSpeed.selfTestReport())
     case "permissions": print(PermissionRequest.selfTestReport())
+    case "settings":
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("settings-panel")
+        print(SettingsPanel.selfTestReport(folder: i + 2 < args.count ? URL(fileURLWithPath: args[i + 2]) : folder))
+    case "settings-live":
+        let folder = URL(fileURLWithPath: i + 2 < args.count ? args[i + 2] : NSTemporaryDirectory())
+        // Under the real run loop, as the icon and the panel need the app really running. Not from the main queue: blocks
+        // the panel queues there couldn't run until the test had returned.
+        app.setActivationPolicy(.accessory)
+        RunLoop.main.perform {
+            print(SettingsPanel.liveSelfTestReport(folder: folder))
+            exit(0)
+        }
+        app.run()
     case "update": print(UpdateInstaller.selfTestReport(install: false))
     case "update-install": print(UpdateInstaller.selfTestReport(install: true))
     case "update-trust": print(UpdateInstaller.trustSelfTestReport(others: args[(i + 2)...].map { URL(fileURLWithPath: $0) }))

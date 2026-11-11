@@ -1,24 +1,29 @@
 import AppKit
 
 // Looks for a newer release at launch and every six hours. With automatic install on (the default) it
-// installs it and relaunches straight away; otherwise the menu offers it.
+// installs it and relaunches straight away; otherwise the settings panel offers it.
 final class Updater {
     enum State {
         case idle, checking, upToDate, available(UpdateFeed.Release), installing(String), failed(String)
+
+        var isBusy: Bool {
+            switch self {
+            case .checking, .installing: return true
+            default: return false
+            }
+        }
     }
 
     static let interval: TimeInterval = 6 * 60 * 60
 
     let current = UpdateInstaller.version(of: Bundle.main.bundleURL) ?? "0"
-    private(set) var state = State.idle
+    private(set) var state = State.idle {
+        didSet { onChange?() }
+    }
+    var onChange: (() -> Void)?
     private var timer: Timer?
 
-    var isBusy: Bool {
-        switch state {
-        case .checking, .installing: return true
-        default: return false
-        }
-    }
+    var isBusy: Bool { state.isBusy }
 
     func start() {
         check()
@@ -27,7 +32,7 @@ final class Updater {
         self.timer = timer
     }
 
-    // A check from the menu says so when there's nothing new; a scheduled one stays quiet.
+    // A check from the panel says so when there's nothing new; a scheduled one stays quiet.
     func check(manual: Bool = false) {
         guard !isBusy else { return }
         state = .checking

@@ -17,7 +17,7 @@ final class FinderPathPaste: TapHandler {
 
     var isEnabled = false
     var isActive: Bool { isEnabled }
-    // Set once Finder has said no, so the menu can offer the setting.
+    // Set once Finder has said no, so the panel can offer the setting.
     private(set) var isDenied = false
     private(set) var lastOutcome: Outcome?
 
@@ -47,6 +47,10 @@ final class FinderPathPaste: TapHandler {
 
     func tapWasDisabled() {
         swallowing = false
+    }
+
+    func clearDenied() {
+        isDenied = false
     }
 
     // Copied files stay a paste of files; only text that names something on disk is a path.

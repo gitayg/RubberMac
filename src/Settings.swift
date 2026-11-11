@@ -51,6 +51,7 @@ enum Settings {
             "autoUpdate": true,
             "writingPadEnabled": true,
             "finderPathPasteEnabled": true,
+            "finderTrashKeyEnabled": true,
             "commandTabWindows": true,
             "fullScreenDockEnabled": true,
             "finderAddressBarEnabled": true,
@@ -176,6 +177,11 @@ enum Settings {
         set { defaults.set(newValue, forKey: "finderPathPasteEnabled") }
     }
 
+    static var finderTrashKeyEnabled: Bool {
+        get { defaults.bool(forKey: "finderTrashKeyEnabled") }
+        set { defaults.set(newValue, forKey: "finderTrashKeyEnabled") }
+    }
+
     static var finderAddressBarEnabled: Bool {
         get { defaults.bool(forKey: "finderAddressBarEnabled") }
         set { defaults.set(newValue, forKey: "finderAddressBarEnabled") }
@@ -218,6 +224,12 @@ enum Settings {
     static var eyeCameraAtLaunch: Bool {
         get { defaults.bool(forKey: "eyeCameraAtLaunch") }
         set { defaults.set(newValue, forKey: "eyeCameraAtLaunch") }
+    }
+
+    // The settings panel's last-viewed page.
+    static var settingsPage: String? {
+        get { defaults.string(forKey: "settingsPage") }
+        set { defaults.set(newValue, forKey: "settingsPage") }
     }
 
     static var cameraAvoid: Bool {
