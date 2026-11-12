@@ -23,6 +23,7 @@ extension SettingsPanel {
         parityChecks(delegate, check)
         wiringChecks(delegate, check)
         widgetChecks(check)
+        swatchChecks(delegate, check)
         drawChecks(delegate, folder: folder, check)
 
         let after = UserDefaults.standard.persistentDomain(forName: Bundle.main.bundleIdentifier ?? ProcessInfo.processInfo.processName) as NSDictionary?
@@ -126,8 +127,8 @@ extension SettingsPanel {
         "Window Layouts", "Remember Layout per Monitor Setup", "Save Layout Now", "Restore Layout Now",
         "Version 9.9.9", "Check for Updates", "Install Updates Automatically",
         "Open at Login",
-        // Added to the menu in 1.22.0, with camrelay not set up.
-        "Eye Color Camera", "Recolours your eyes live on video calls", "Set Up camrelay…",
+        // Added to the menu in 1.22.0; without OBS the page says what to install.
+        "Eye Color Camera", "Recolours your eyes live on video calls", "Get OBS…",
     ]
 
     private static func parityChecks(_ delegate: AppDelegate, _ check: Check) {
@@ -183,7 +184,7 @@ extension SettingsPanel {
         let cameras = [EyeCamera.Camera(index: 0, name: "Test Camera", virtual: false), EyeCamera.Camera(index: 1, name: "OBS Virtual Camera", virtual: true)]
         // "Camera" alone is also the Windows page's card about a camera on a stand, so its choices stand in for it.
         for text in ["Recolour My Eyes on the Virtual Camera", "Colour", "Blue", "Strength", "30%", "90%", "Refresh List",
-                     "Calibrate…", "Turn On When RubberMAC Starts", "In Zoom, Meet or Teams, choose OBS Virtual Camera", "Looking for cameras…"] {
+                     "Turn On When RubberMAC Starts", "In Zoom, Meet or Teams, choose OBS Virtual Camera", "Looking for cameras…"] {
             conditional(text) { $0.eye.installed = true }
         }
         conditional("Test Camera") { $0.eye.installed = true; $0.eye.cameras = cameras }
@@ -301,6 +302,40 @@ extension SettingsPanel {
         window.appearance = NSAppearance(named: appearance)
         window.contentView = panel.root
         return window
+    }
+
+    private static func swatchChecks(_ delegate: AppDelegate, _ check: Check) {
+        let swatches = EyeColorSwatches()
+        swatches.setFrameSize(NSSize(width: 460, height: EyeColorSwatches.height))
+        var picked: [String] = []
+        swatches.onPick = { picked.append($0) }
+        swatches.show(colors: ["blue", "ice-blue", "brown"], selected: "ice-blue")
+        swatches.layoutSubtreeIfNeeded()
+        let circles = swatches.swatches
+        check(circles.map(\.colorName) == ["blue", "ice-blue", "brown"] && circles.allSatisfy { $0.fill != nil },
+              "colour circles: one for each colour, filled with it")
+        check(circles.filter(\.isChosen).map(\.colorName) == ["ice-blue"] && swatches.name.stringValue == "Ice Blue",
+              "only the chosen colour is ringed, and its name shows under the title (\(swatches.name.stringValue))")
+        check(circles.map { $0.accessibilityLabel() ?? "" } == ["Blue", "Ice Blue", "Brown"]
+              && circles.allSatisfy { $0.accessibilityRole() == .radioButton }, "VoiceOver reads each as a radio button with its colour's name")
+        circles[2].performClick(nil)
+        check(picked == ["brown"] && circles.filter(\.isChosen).map(\.colorName) == ["brown"] && swatches.name.stringValue == "Brown",
+              "one click picks a colour (\(picked))")
+        let frames = circles.map(\.frame)
+        check(zip(frames, frames.dropFirst()).allSatisfy { $0.maxX <= $1.minX } && (frames.first?.minX ?? 0) > 120
+              && (frames.last?.maxX ?? .infinity) <= swatches.bounds.width,
+              "the circles sit side by side, right of the title, inside the row")
+
+        var facts = base()
+        facts.eye = EyeFacts(installed: true, colors: ["blue", "hazel"], color: "hazel")
+        let page = delegate.settingsPages(facts).first { $0.id == AppDelegate.eyeCameraPageID }
+        if case .custom(let view)? = page?.rows.first(where: { $0.title == "Colour" })?.control, let shown = view as? EyeColorSwatches {
+            check(shown.swatches.map(\.colorName) == ["blue", "hazel"] && shown.selected == "hazel" && shown.onPick != nil,
+                  "the Eye Color Camera page shows its colours as circles, the chosen one ringed, and a pick changes the colour")
+        } else {
+            check(false, "the Eye Color Camera page shows its colours as circles")
+        }
+        check(page?.filtered("hazel")?.rows.contains { $0.title == "Colour" } == true, "searching for a colour's name finds the Colour row")
     }
 
     private static func widgetChecks(_ check: Check) {
@@ -449,6 +484,9 @@ extension SettingsPanel {
         facts.needsAccess = true
         facts.permissions = PermissionCheck(accessibility: false, screenRecording: false, finder: .off, finderUsed: true)
         facts.permissionsChecked = Date()
+        facts.eye = EyeFacts(installed: true, isOn: true, status: "On: sending to OBS Virtual Camera",
+                             colors: ["blue", "ice-blue", "deep-blue", "blue-green", "green", "gray", "hazel", "amber", "brown"],
+                             color: "hazel", cameras: [EyeCamera.Camera(index: 0, name: "MacBook Pro Camera", virtual: false)], isStreaming: true)
 
         for (name, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
             let panel = SettingsPanel()

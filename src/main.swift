@@ -40,6 +40,21 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "pad": print(WritingAssistant.selfTestReport())
     case "eyecamera": print(EyeCamera.selfTestReport())
     case "eyepreview": print(EyePreview.selfTestReport())
+    case "virtualcam": print(VirtualCameraSink.selfTestReport())
+    case "eyelive":
+        // Under the real run loop: EyeCamera's timer and its first-frame callback run on the main thread.
+        app.setActivationPolicy(.accessory)
+        RunLoop.main.perform {
+            print(EyeCamera.liveSelfTestReport())
+            exit(0)
+        }
+        app.run()
+    case "eyepipeline":
+        guard i + 2 < args.count else { print("usage: --selftest eyepipeline <photo.png> [folder]"); break }
+        print(EyeCamera.pipelineSelfTestReport(photo: URL(fileURLWithPath: args[i + 2]),
+                                               folder: i + 3 < args.count ? URL(fileURLWithPath: args[i + 3]) : nil))
+    case "irisrecolor": print(IrisRecolor.selfTestReport())
+    case "eyetracker": print(EyeTracker.selfTestReport())
     case "finder": print(FinderPathPaste.selfTestReport())
     case "finder-bar": print(FinderAddressBar.selfTestReport())
     case "finder-trash": print(FinderTrashKey.selfTestReport())
@@ -79,6 +94,8 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
 }
 
 app.setActivationPolicy(.accessory)
+// Before the Eye Color Camera reads its settings: they used to live in camrelay's config file.
+Settings.adoptCamrelaySettings()
 let delegate = AppDelegate(lockWarning: LockWarning(timeoutOverride: timeoutOverride))
 app.delegate = delegate
 app.run()

@@ -5,7 +5,7 @@
 	<!-- Hardened runtime blocks Apple Events without this: pasting a path in Finder moves its window with one. -->
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
-	<!-- Hardened runtime blocks the camera without this: the Eye Color Camera's helper reads it on RubberMAC's behalf. -->
+	<!-- Hardened runtime blocks the camera without this: the Eye Color Camera reads it, and its preview reads OBS Virtual Camera. -->
 	<key>com.apple.security.device.camera</key>
 	<true/>
 </dict>

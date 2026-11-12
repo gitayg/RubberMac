@@ -226,6 +226,36 @@ enum Settings {
         set { defaults.set(newValue, forKey: "eyeCameraAtLaunch") }
     }
 
+    // The Eye Color Camera's colour, strength and camera (its AVFoundation uniqueID).
+    static var eyeColor: String {
+        get { defaults.string(forKey: "eyeColor") ?? "blue" }
+        set { defaults.set(newValue, forKey: "eyeColor") }
+    }
+
+    static var eyeStrength: Double {
+        get { (defaults.object(forKey: "eyeStrength") as? Double).map { min(1, max(0, $0)) } ?? 0.6 }
+        set { defaults.set(newValue, forKey: "eyeStrength") }
+    }
+
+    static var eyeCameraID: String? {
+        get { defaults.string(forKey: "eyeCameraID") }
+        set { defaults.set(newValue, forKey: "eyeCameraID") }
+    }
+
+    // Until 1.26 camrelay kept these in its own config file; carry them over once, so an upgrade keeps your colour.
+    static func adoptCamrelaySettings(from file: URL = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent(".config/camrelay/config.json")) {
+        guard defaults.object(forKey: "eyeColor") == nil, let data = try? Data(contentsOf: file),
+              let config = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        let kept = EyeCamera.adopted(from: config)
+        if let color = kept.color { eyeColor = color }
+        if let strength = kept.strength { eyeStrength = strength }
+        if let id = kept.cameraID { eyeCameraID = id }
+        // Stored even when camrelay had no colour, so this runs once.
+        eyeColor = eyeColor
+        log("eye camera: took over camrelay's settings (\(eyeColor) at \(Int(eyeStrength * 100))%)")
+    }
+
     // The settings panel's last-viewed page.
     static var settingsPage: String? {
         get { defaults.string(forKey: "settingsPage") }

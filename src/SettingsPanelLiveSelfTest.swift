@@ -140,10 +140,10 @@ extension SettingsPanel {
         picture("permissions")
 
         panel.choose(AppDelegate.eyeCameraPageID)
-        let installed = EyeCamera.python() != nil
+        let installed = EyeCamera.isAvailable
         let eyeRows = { delegate.settingsPages().first { $0.id == AppDelegate.eyeCameraPageID }?.rows.map(\.title) ?? [] }
         check(waitFor(5) { panel.shown == AppDelegate.eyeCameraPageID && (!installed || eyeRows().contains("Recolour My Eyes on the Virtual Camera")) },
-              "the Eye Color Camera page shows camrelay's controls (camrelay \(installed ? "found" : "not set up"))")
+              "the Eye Color Camera page shows its controls (OBS Virtual Camera \(installed ? "found" : "not installed"))")
         if installed { check(waitFor(10) { delegate.eyeCamera.cameras.contains { !$0.virtual } }, "and lists a real camera to read from") }
         pump(0.5)
         picture("eye-camera")

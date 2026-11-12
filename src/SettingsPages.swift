@@ -29,7 +29,6 @@ struct SettingsFacts {
 struct EyeFacts {
     var installed = false
     var isOn = false
-    var isCalibrating = false
     var status = "Off"
     var hasError = false
     var colors = ["blue"]
@@ -81,9 +80,9 @@ extension AppDelegate {
         }
     }
 
-    // Starts the helper so the camera list is ready, as opening the menu's section used to.
+    // Lists the cameras so the page can offer them.
     private func showingEyeCamera() {
-        guard EyeCamera.python() != nil else { return }
+        guard EyeCamera.isAvailable else { return }
         eyeCamera.prepare()
         eyeSeparateApp = EyeCamera.separateAppRunning()
         settingsPanel.reloadIfShown()
@@ -116,7 +115,7 @@ extension AppDelegate {
         facts.needsAccess = needsAccess
         facts.permissions = permissionReading()
         facts.permissionsChecked = permissionsChecked
-        facts.eye = EyeFacts(installed: EyeCamera.python() != nil, isOn: eyeCamera.isOn, isCalibrating: eyeCamera.isCalibrating,
+        facts.eye = EyeFacts(installed: EyeCamera.isAvailable, isOn: eyeCamera.isOn,
                              status: eyeCamera.statusLine, hasError: eyeCamera.errorMessage != nil, colors: eyeCamera.colors,
                              color: eyeCamera.color, strength: eyeCamera.strength, cameras: eyeCamera.cameras,
                              cameraIndex: eyeCamera.cameraIndex, separateApp: eyeSeparateApp, isStreaming: eyeCamera.state == .on,
@@ -318,20 +317,24 @@ extension AppDelegate {
         ], needsAttention: facts.needsAccess)
     }
 
-    // Recolours your eyes on the virtual camera through camrelay, run as a helper.
+    // Recolours your eyes on OBS's virtual camera, which is all it needs installed.
     private func eyeCameraPage(_ facts: SettingsFacts) -> SettingsPage {
         let eye = facts.eye
         var rows: [SettingsRow]
         if !eye.installed {
             rows = [.note("Recolours your eyes live on video calls"),
-                    button("Set Up camrelay…", "Set Up", #selector(openCamrelayProject), closes: true)]
+                    .note("It sends the picture to OBS's virtual camera: install OBS, click Start Virtual Camera in it once, and allow its camera extension when macOS asks"),
+                    button("Get OBS…", "Download", #selector(openOBSDownload), closes: true)]
         } else {
             rows = [toggle("Recolour My Eyes on the Virtual Camera", #selector(toggleEyeCamera), on: eye.isOn, note: eye.status)]
             if eye.hasError { rows.append(button("Show the Whole Error…", "Show", #selector(showEyeCameraError), closes: true)) }
+            // The names ride along as the row's note, unseen, so searching for "hazel" finds the row. It sits above the
+            // preview, so a colour is one click away and its effect shows right below.
+            eyeSwatches.show(colors: eye.colors, selected: eye.color)
+            eyeSwatches.onPick = { [eyeCamera] in eyeCamera.setColor($0) }
+            rows.append(SettingsRow(title: "Colour", note: eye.colors.map(EyeCamera.title(for:)).joined(separator: "\n"),
+                                    control: .custom(eyeSwatches)))
             rows += eyePreviewRows(eye)
-            rows.append(popup("Colour", eye.colors.enumerated().map { index, name in
-                action(EyeCamera.title(for: name), #selector(setEyeColor(_:)), on: name == eye.color, tag: index)
-            }))
             rows.append(popup("Strength", EyeCamera.strengths.enumerated().map { index, value in
                 action("\(Int((value * 100).rounded()))%", #selector(setEyeStrength(_:)), on: abs(value - eye.strength) < 0.025, tag: index)
             }))
@@ -341,8 +344,6 @@ extension AppDelegate {
             }
             if cameras.isEmpty { cameras = [infoItem("Looking for cameras…")] }
             rows.append(popup("Camera", cameras + [.separator(), action("Refresh List", #selector(refreshEyeCameras))]))
-            rows.append(button("Calibrate…", "Calibrate", #selector(calibrateEyeCamera), note: eye.isCalibrating ? "Calibrating in its own window…" : nil,
-                               enabled: !eye.isCalibrating, closes: true))
             rows.append(toggle("Turn On When RubberMAC Starts", #selector(toggleEyeCameraAtLaunch), on: Settings.eyeCameraAtLaunch))
             rows.append(.note("In Zoom, Meet or Teams, choose OBS Virtual Camera"))
             if eye.separateApp {

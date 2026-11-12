@@ -38,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let writing = WritingAssistant()
     let eyeCamera = EyeCamera()
     let eyePreview = EyePreview()
+    let eyeSwatches = EyeColorSwatches()
     private var iconEyeColor: String?
     var statusItem: NSStatusItem!
     var sliders: [BrightnessSliderView] = []
@@ -107,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.async { [weak self] in self?.askForPermissionsDue() }
         if Settings.writingPadEnabled && ScreenText.hasPermission { ScreenText.warmUp() }
         updater.start()
-        if Settings.eyeCameraAtLaunch && EyeCamera.python() != nil { eyeCamera.start() }
+        if Settings.eyeCameraAtLaunch && EyeCamera.isAvailable { eyeCamera.start() }
 
         // Posted when any app's Accessibility permission changes; start the keyboard tap once granted.
         DistributedNotificationCenter.default().addObserver(forName: .init("com.apple.accessibility.api"),
@@ -342,13 +343,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func toggleEyeCamera() {
-        guard !eyeCamera.isCalibrating else { return }
         eyeCamera.toggle()
-    }
-
-    @objc func setEyeColor(_ sender: NSMenuItem) {
-        guard eyeCamera.colors.indices.contains(sender.tag) else { return }
-        eyeCamera.setColor(eyeCamera.colors[sender.tag])
     }
 
     @objc func setEyeStrength(_ sender: NSMenuItem) {
@@ -362,10 +357,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func refreshEyeCameras() {
         eyeCamera.refreshCameras()
-    }
-
-    @objc func calibrateEyeCamera() {
-        eyeCamera.calibrate()
     }
 
     @objc func toggleEyeCameraAtLaunch() {
@@ -399,8 +390,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         EyeCamera.quitSeparateApp()
     }
 
-    @objc func openCamrelayProject() {
-        NSWorkspace.shared.open(EyeCamera.projectURL)
+    @objc func openOBSDownload() {
+        NSWorkspace.shared.open(EyeCamera.obsURL)
     }
 
     @objc func toggleLayouts() {
