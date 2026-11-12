@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.27.0
+- **⌘L locks the screen, like Win+L on a PC.** It locks at once, the same way as Lock Screen in the Apple menu, from any app. It takes ⌘L from every app, so ⌘L no longer jumps to a browser's address bar (click the bar instead); turn it off with **⌘L Locks the Screen, Like Win+L** on the Keyboard page.
+
 ## 1.26.0
 - **The Eye Color Camera is built in: no Python, no camrelay.** RubberMAC now reads the camera, finds your irises with Apple's Vision framework, recolours them and sends the picture to OBS Virtual Camera itself. All it needs is OBS installed, with Start Virtual Camera clicked in it once; OBS needn't be running. Your colour, strength and camera carry over from camrelay. Calibrate… is gone: the live preview and the colour circles on the page do its job.
 - **Pick the eye colour in one click.** The Eye Color Camera page shows its colours as a row of circles, like the accent colours in System Settings, instead of a menu of names: the chosen one is ringed, and the name of the chosen one (or the one under the pointer) shows under **Colour**. The row sits right under the switch, above the preview, so the effect shows just below. Searching for a colour's name, like "hazel", finds it; VoiceOver reads each circle by name.

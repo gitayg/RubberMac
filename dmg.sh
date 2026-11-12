@@ -30,11 +30,16 @@ xcrun notarytool submit "$ZIP" --keychain-profile screentools --wait
 xcrun stapler staple "$APP"
 rm -f "$ZIP"
 
+# Filled through a mount point of its own: macOS can refuse a script access to images mounted under /Volumes, which
+# is where `hdiutil create -srcfolder` mounts its working copy ("create failed - Operation not permitted").
 rm -rf "$STAGE" "$DMG"
-mkdir -p "$STAGE"
-ditto "$APP" "$STAGE/RubberMAC.app"
-ln -s /Applications "$STAGE/Applications"
-hdiutil create -volname "RubberMAC $VERSION" -srcfolder "$STAGE" -fs HFS+ -format UDZO "$DMG"
+mkdir -p "$STAGE/mount"
+hdiutil create -size "$(( $(du -sm "$APP" | cut -f1) + 20 ))m" -fs HFS+ -volname "RubberMAC $VERSION" -type UDIF "$STAGE/rw.dmg"
+hdiutil attach -nobrowse -noautoopen -mountpoint "$STAGE/mount" "$STAGE/rw.dmg"
+ditto "$APP" "$STAGE/mount/RubberMAC.app"
+ln -s /Applications "$STAGE/mount/Applications"
+hdiutil detach "$STAGE/mount"
+hdiutil convert "$STAGE/rw.dmg" -format UDZO -o "$DMG"
 rm -rf "$STAGE"
 codesign --force --timestamp --sign "$IDENTITY" "$DMG"
 xcrun notarytool submit "$DMG" --keychain-profile screentools --wait

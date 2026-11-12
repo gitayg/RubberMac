@@ -225,6 +225,8 @@ extension AppDelegate {
                          note: "Ctrl stays Ctrl in terminals, VS Code and remote desktops"),
             accessToggle("Ctrl-←/→ by Word, Home/End to Line Start/End", #selector(toggleTextNav), on: Settings.textNavEnabled, facts),
             accessToggle("Left Alt-Shift Switches Language", #selector(toggleInputSwitch), on: Settings.inputSwitchEnabled, facts),
+            toggle("⌘L Locks the Screen, Like Win+L", #selector(toggleLockKey), on: Settings.lockKeyEnabled,
+                   note: "Everywhere, so ⌘L no longer goes to a browser's address bar"),
         ]
         var finder = [
             accessToggle("Paste a Path in Finder to Go There", #selector(toggleFinderPaste), on: Settings.finderPathPasteEnabled, facts,

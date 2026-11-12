@@ -173,6 +173,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         lockWarning.refresh()
     }
 
+    @objc func toggleLockKey() {
+        Settings.lockKeyEnabled.toggle()
+        applyHotKeys()
+    }
+
     @objc func toggleBrightnessKeys() {
         Settings.brightnessKeysEnabled.toggle()
         applyHotKeys()
@@ -443,6 +448,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if Settings.writingPadEnabled {
             hotKeys.register(keyCode: kVK_Space, modifiers: cmdKey | shiftKey) { [writing] in writing.toggle() }
+        }
+        if Settings.lockKeyEnabled {
+            hotKeys.register(keyCode: kVK_ANSI_L, modifiers: cmdKey) { ScreenLock.lock() }
         }
     }
 }

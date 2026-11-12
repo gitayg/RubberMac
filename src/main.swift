@@ -41,6 +41,7 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "eyecamera": print(EyeCamera.selfTestReport())
     case "eyepreview": print(EyePreview.selfTestReport())
     case "virtualcam": print(VirtualCameraSink.selfTestReport())
+    case "screenlock": print(ScreenLock.selfTestReport())
     case "eyelive":
         // Under the real run loop: EyeCamera's timer and its first-frame callback run on the main thread.
         app.setActivationPolicy(.accessory)

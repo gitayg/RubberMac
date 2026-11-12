@@ -19,7 +19,8 @@ final class HotKeys {
         }, 1, &spec, Unmanaged.passUnretained(self).toOpaque(), &handler)
     }
 
-    func register(keyCode: Int, modifiers: Int, action: @escaping () -> Void) {
+    @discardableResult
+    func register(keyCode: Int, modifiers: Int, action: @escaping () -> Void) -> Bool {
         let id = UInt32(actions.count + 1)
         var ref: EventHotKeyRef?
         let status = RegisterEventHotKey(UInt32(keyCode), UInt32(modifiers),
@@ -27,10 +28,11 @@ final class HotKeys {
                                          GetApplicationEventTarget(), 0, &ref)
         guard status == noErr, let ref else {
             log("hotkey \(keyCode) with modifiers \(modifiers) not registered: OSStatus \(status)")
-            return
+            return false
         }
         refs.append(ref)
         actions[id] = action
+        return true
     }
 
     func unregisterAll() {

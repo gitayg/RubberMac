@@ -42,6 +42,7 @@ enum Settings {
             "altTabMode": AltTabMode.apps.rawValue,
             "layoutsEnabled": true,
             "brightnessKeysEnabled": true,
+            "lockKeyEnabled": true,
             "clipboardKeysEnabled": true,
             "textNavEnabled": true,
             "minimizeAllEnabled": true,
@@ -155,6 +156,11 @@ enum Settings {
     static var autoUpdate: Bool {
         get { defaults.bool(forKey: "autoUpdate") }
         set { defaults.set(newValue, forKey: "autoUpdate") }
+    }
+
+    static var lockKeyEnabled: Bool {
+        get { defaults.bool(forKey: "lockKeyEnabled") }
+        set { defaults.set(newValue, forKey: "lockKeyEnabled") }
     }
 
     static var brightnessKeysEnabled: Bool {
