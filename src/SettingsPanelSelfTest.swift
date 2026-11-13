@@ -164,6 +164,11 @@ extension SettingsPanel {
         conditional("Let the Pad Read the Screen You're Replying To…") { $0.permissions = noScreen }
         conditional("Let RubberMAC Move Finder Windows…") { $0.finderDenied = true }
         conditional("Fixing needs Apple Intelligence (System Settings)") { $0.fixerAvailable = false }
+        let fontSwitch = "Add \(BundledFont.family) to Every App"
+        check(plain.contains(fontSwitch) && plain.contains("Font"), "the Writing page has the font switch in a Font card")
+        conditional("\(BundledFont.family) is already installed on this Mac") { $0.fontElsewhere = true }
+        check(!texts { $0.fontElsewhere = true }.contains(fontSwitch), "installed some other way, it says so instead of offering a second copy")
+        check(texts { $0.fontElsewhere = true; $0.fontInstalled = true }.contains(fontSwitch), "installed by RubberMAC, the switch stays to turn it off")
         let one = ["Test Mouse"], two = ["Mouse A", "Mouse B"]
         check(plain.contains("No mouse connected") && !texts { $0.mice = one }.contains("No mouse connected"), "No mouse connected shows only with no mouse")
         conditional("Mouse: Test Mouse") { $0.mice = one }

@@ -21,6 +21,8 @@ struct SettingsFacts {
     var permissions = PermissionCheck(accessibility: true, screenRecording: true, finder: .on, finderUsed: true)
     var permissionsChecked: Date?
     var eye = EyeFacts()
+    var fontInstalled = false
+    var fontElsewhere = false
 
     var allSoftware: Bool { !displays.isEmpty && displays.allSatisfy { !$0.hardware } }
 }
@@ -120,6 +122,8 @@ extension AppDelegate {
                              color: eyeCamera.color, strength: eyeCamera.strength, cameras: eyeCamera.cameras,
                              cameraIndex: eyeCamera.cameraIndex, separateApp: eyeSeparateApp, isStreaming: eyeCamera.state == .on,
                              previewAccess: EyePreview.access, previewProblem: eyePreview.problem)
+        facts.fontInstalled = BundledFont.isInstalled()
+        facts.fontElsewhere = !BundledFont.elsewhere().isEmpty
         return facts
     }
 
@@ -253,8 +257,15 @@ extension AppDelegate {
             rows.append(button("Let the Pad Read the Screen You're Replying To…", "Allow", #selector(allowScreenReading), closes: true))
         }
         rows.append(button("Open Saved Replies", "Open", #selector(openReplies), closes: true))
-        return SettingsPage(id: "writing", title: "Writing", symbol: "square.and.pencil", tint: .systemPink,
-                            sections: [SettingsSection(title: nil, rows: rows)])
+        // Installed some other way, a second copy would only list each face twice.
+        let font: SettingsRow = facts.fontElsewhere && !facts.fontInstalled
+            ? .note("\(BundledFont.family) is already installed on this Mac")
+            : toggle("Add \(BundledFont.family) to Every App", #selector(toggleBundledFont), on: facts.fontInstalled,
+                     note: "The Braille Institute's typeface for easy reading, in every app's font list. macOS's own menus keep their font")
+        return SettingsPage(id: "writing", title: "Writing", symbol: "square.and.pencil", tint: .systemPink, sections: [
+            SettingsSection(title: nil, rows: rows),
+            SettingsSection(title: "Font", rows: [font]),
+        ])
     }
 
     private func mousePage(_ facts: SettingsFacts) -> SettingsPage {

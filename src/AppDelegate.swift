@@ -178,6 +178,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyHotKeys()
     }
 
+    @objc func toggleBundledFont() {
+        let turningOn = !BundledFont.isInstalled()
+        do {
+            let outcome = turningOn ? try BundledFont.install() : try BundledFont.remove()
+            log("font: \(BundledFont.family) \(turningOn ? "on, \(outcome.copied) faces copied" : "off, \(outcome.removed) faces removed")"
+                + (outcome.leftAlone.isEmpty ? "" : ", \(outcome.leftAlone.count) other file(s) of the same name left alone"))
+        } catch {
+            log("font: couldn't turn \(BundledFont.family) \(turningOn ? "on" : "off") (error \((error as NSError).code))")
+        }
+        settingsPanel.reloadIfShown()
+    }
+
     @objc func toggleBrightnessKeys() {
         Settings.brightnessKeysEnabled.toggle()
         applyHotKeys()

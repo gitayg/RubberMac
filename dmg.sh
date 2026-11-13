@@ -20,6 +20,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp Info.plist "$APP/Contents/Info.plist"
 cp build/ScreenTools "$APP/Contents/MacOS/ScreenTools"
 cp icon/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+ditto fonts/AtkinsonHyperlegibleNext "$APP/Contents/Resources/Fonts"
 codesign --force --options runtime --entitlements ScreenTools.entitlements --timestamp --sign "$IDENTITY" "$APP"
 codesign --verify --strict "$APP"
 

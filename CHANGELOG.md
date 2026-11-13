@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.28.0
+- **Atkinson Hyperlegible Next comes with RubberMAC.** The Braille Institute's typeface for easy reading is inside the app, all 14 faces from ExtraLight to ExtraBold with their italics. **Add Atkinson Hyperlegible Next to Every App**, on the Writing page, puts it in every app's font list, the way Font Book's Install does, and turning it off takes it out again. It never overwrites or removes a font file that isn't its own copy, and if you've already installed the font another way the page says so instead of adding a second copy. macOS's own menus and windows keep their font: that font is on the sealed system volume, and no app can change it.
+
 ## 1.27.0
 - **⌘L locks the screen, like Win+L on a PC.** It locks at once, the same way as Lock Screen in the Apple menu, from any app. It takes ⌘L from every app, so ⌘L no longer jumps to a browser's address bar (click the bar instead); turn it off with **⌘L Locks the Screen, Like Win+L** on the Keyboard page.
 

@@ -20,6 +20,7 @@ A macOS menu-bar app (Swift/AppKit, no Xcode project) with Windows habits and di
   - Paste a path in Finder (⌘V or Ctrl-V) to go to that folder in the same window, without ⌘⇧G. A file's path goes to its folder and selects it. Plain paths, `~`, `file://` links, quoted paths and terminal-style `My\ Folder` all work. Pasting into a text box in Finder and pasting copied files work as before.
   - Delete in Finder moves the highlighted file to the Trash (⌘Z puts it back), with either delete key. Renaming, search, the address bar and the writing pad keep their delete key.
   - An address bar under the toolbar of the front Finder window shows the folder's path; paste or type a path there and press ↩ to go to it.
+- **Atkinson Hyperlegible Next:** the Braille Institute's typeface for easy reading comes with the app. A switch on the Writing page adds it to every app's font list by copying its 14 faces into `~/Library/Fonts`, as Font Book's Install does, and takes them out again; it never overwrites or removes a file that isn't its own copy. If the font is already installed some other way, the page says so instead. macOS's own menus and windows keep their font: that font is on the sealed system volume, and no app can change it.
 - **Writing pad:** ⌘⇧Space in Teams, Outlook or any app opens a pad (taken before Siri sees it, so holding it doesn't bring up Siri) to write the reply in. Apple's on-device model fixes it as you type, and ↩ pastes the fixed text where you were typing and leaves it on the clipboard. Each reply is saved with the text of the window it answered, read from the screen.
 - **Mouse:**
   - Pointer speed up to 16 and wheel speed ×0.5–×8, each remembered per mouse model.
@@ -44,7 +45,7 @@ Everything runs on the Mac. Its only network traffic is checking GitHub for upda
 ./build.sh
 ```
 
-`build.sh` compiles `src/*.swift` with `swiftc`, then installs `~/Applications/RubberMAC.app`, signs it with the Developer ID and relaunches it. The Developer ID signature is what keeps the Accessibility grant across rebuilds.
+`build.sh` compiles `src/*.swift` with `swiftc`, then installs `~/Applications/RubberMAC.app` (with the fonts in `fonts/` in its Resources), signs it with the Developer ID and relaunches it. The Developer ID signature is what keeps the Accessibility grant across rebuilds.
 
 ## Release
 
@@ -106,6 +107,7 @@ open -n --stdout /tmp/st.txt "$HOME/Applications/RubberMAC.app" --args --selftes
 | `eyecamera` | the Eye Color Camera without opening a camera: OBS Virtual Camera is installed, the cameras are listed with OBS's marked as one that can't be the input, a real one is picked, every colour has its RGB, and camrelay's saved settings carry over (old names, a strength past 100%) |
 | `virtualcam` | sends test frames into OBS Virtual Camera and reads them back through the camera, as a call app would: they arrive with their colours, a 1280 × 720 frame comes out scaled to the camera's size, and after stopping the camera no longer shows them. Skips while another app uses the virtual camera |
 | `screenlock` | that macOS has the call Lock Screen makes (not called: it would lock the screen), that the screen reads as unlocked, and that ⌘L can be taken as a hotkey. The lock itself: press ⌘L and find `lock screen: locked` in the log |
+| `fonts` | the app carries the 14 faces of Atkinson Hyperlegible Next and their licence, each a font of that family with its licence notice; on a scratch folder, turning the font on copies only what's missing and never overwrites another file of the same name, and turning it off removes only RubberMAC's own unchanged copies. Leaves `~/Library/Fonts` alone. The real install: turn it on and find the family in another app |
 | `eyepipeline <photo.png> [folder]` | the whole Eye Color Camera with a photo standing in for the camera: tracker, recolouring and OBS Virtual Camera, read back from the virtual camera; the irises arrive recoloured as IrisRecolor paints them, the cheeks untouched, at 30 fps or better. The photo stays on the Mac; a crop of what arrived is saved to the folder |
 | `eyelive` | the real thing, as the page's switch does it: turns the chosen camera on (its light comes on), reads OBS Virtual Camera as a call app would for 6 s, and turns it off. Checks it keeps up with the camera (which sets the pace; a MacBook's drops to 15 fps in dim light), that the frames reach the virtual camera, that both eyes are found (face the camera), and that no setting changed. Saves no picture. Run it only when you mean to |
 | `irisrecolor` | the iris recolouring on drawn eyes: clipped by the eyelids, pupil and glints kept, nothing outside the eye touched |
@@ -182,4 +184,4 @@ Logs go to `~/Library/Logs/ScreenTools.log`. A key that waited more than 50 ms f
 
 ## License
 
-MIT. See [LICENSE](LICENSE). Parts of `src/IrisRecolor.swift` translate OpenCV (Apache License 2.0); see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+MIT. See [LICENSE](LICENSE). Parts of `src/IrisRecolor.swift` translate OpenCV (Apache License 2.0), and the Atkinson Hyperlegible Next fonts in `fonts/` are under the SIL Open Font License 1.1; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
