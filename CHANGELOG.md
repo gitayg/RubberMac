@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.32.1
+- Repo only, no change to the app: `downloads.sh` shows how often each release has been downloaded, and a daily **Download Counts** workflow keeps that history on the `stats` branch, since GitHub keeps only running totals.
+
 ## 1.32.0
 More ideas from MacRumors forum threads.
 - **A mouse wheel that works like Windows.** The wheel can scroll the classic way while the trackpad stays natural, every notch can scroll the same 3 lines however fast you turn it (Logi Options+ mice too), and ⌘ + wheel zooms Google Chrome, Claude and other apps in and out like Ctrl + wheel, without ⌘'s release opening Start; three switches on the Mouse page, the first two off until you turn them on.

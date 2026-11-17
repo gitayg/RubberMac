@@ -84,6 +84,14 @@ To hand the app to someone without publishing an update, run `./dmg.sh` instead.
 
 The release is built and signed on this Mac, not in CI. Signing in CI would mean exporting the Developer ID key into GitHub secrets.
 
+## Download counts
+
+- `./downloads.sh` prints every release's downloads from GitHub's own count for each file. The DMG count is people downloading RubberMAC from the releases page. The zip count is mostly RubberMAC updating itself (see below), this Mac included.
+- GitHub keeps only each file's running total. So the **Download Counts** workflow (`.github/workflows/downloads.yml`) records the counts once a day (05:17 UTC, or by hand from the Actions tab) on the `stats` branch:
+  - `downloads.csv` holds every day's counts per file;
+  - its `README.md` shows the totals per day and how many were added since the day before.
+- The branch holds only those two files, and the workflow makes it on its first run. GitHub pauses scheduled workflows in a repo with no activity for 60 days.
+
 ## How updates are checked
 
 - `UpdateFeed` reads GitHub's latest-release API for this repo. A release holds a zip, which the updater downloads, and a DMG for installing by hand.
