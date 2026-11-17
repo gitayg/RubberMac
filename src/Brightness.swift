@@ -19,6 +19,8 @@ final class Brightness {
     private(set) var levels: [CGDirectDisplayID: Int] = [:]
     private var pending: [CGDirectDisplayID: Int] = [:]
     private var draining = false
+    // Told of each screen the keys changed, with its new level, so the level can be shown there.
+    var onStep: ((CGDirectDisplayID, Int) -> Void)?
 
     var allSoftware: Bool { !displays.isEmpty && displays.allSatisfy { !$0.hardware } }
 
@@ -62,6 +64,7 @@ final class Brightness {
         refresh { [self] in
             for display in displays {
                 set((levels[display.id] ?? 100) + direction * Self.step, for: display.id)
+                onStep?(display.id, levels[display.id] ?? 100)
             }
         }
     }

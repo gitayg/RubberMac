@@ -1,13 +1,21 @@
 import AppKit
 
 enum WindowSnapper {
+    // The window the last ⌘↑ moved, with where it asked it to go and where it ended up (an app can refuse a size).
+    // Any other snap forgets it.
+    private static var lastUp: (window: AXUIElement, frames: [CGRect])?
+
     static func snap(_ direction: SnapDirection, grid: SnapGrid) {
         guard AX.isTrusted else { AX.requestAccess(); return }
-        guard let window = frontWindow(),
-              let current = AX.frame(of: window),
-              let result = SnapGeometry.target(for: current, direction, grid: grid, screens: screenAreas()) else { return }
+        guard let window = frontWindow(), let current = AX.frame(of: window) else { return }
+        let again = direction == .up
+            && lastUp.map { CFEqual($0.window, window) && SnapGeometry.pressedAgain(current, after: $0.frames) } == true
+        lastUp = nil
+        guard let result = SnapGeometry.target(for: current, direction, grid: grid, screens: screenAreas(), again: again) else { return }
         switch result {
-        case .frame(let target): AX.setFrame(window, target)
+        case .frame(let target):
+            AX.setFrame(window, target)
+            if direction == .up { lastUp = (window, [target] + [AX.frame(of: window)].compactMap { $0 }) }
         case .minimize: AX.setMinimized(window, true)
         }
     }

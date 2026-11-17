@@ -11,16 +11,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let windowKeys = WindowKeys()
     private let textNav = TextNavKeys()
     private let minimizeAll = MinimizeAllKeys()
+    private let spotlight = SpotlightKeys()
     private let inputSwitch = InputSwitchKeys()
     let finderPaste = FinderPathPaste()
     let finderTrash = FinderTrashKey()
     private let padKeys = WritingPadKeys()
     private let dockPicker = DockWindowPicker()
-    // inputSwitch goes first: it only watches, and must see keys a later handler swallows. finderPaste comes after
-    // clipboard, so a Ctrl-V reaches it as ⌘V.
+    // spotlight and inputSwitch go first: they must see keys a later handler swallows. spotlight takes only ⌘R, held
+    // with nothing else, when inputSwitch's Alt-Shift can't be under way; inputSwitch only watches. finderPaste comes
+    // after clipboard, so a Ctrl-V reaches it as ⌘V.
     private lazy var keyboardTap = EventTap(name: "keyboard", types: [.keyDown, .keyUp, .flagsChanged],
                                             location: .cghidEventTap, ownThread: true,
-                                            handlers: [inputSwitch, dockPicker.keys, padKeys, windowKeys, minimizeAll, altTab, clipboard, finderPaste, finderTrash, textNav])
+                                            handlers: [spotlight, inputSwitch, InputPerApp.shared.keys, dockPicker.keys, padKeys, windowKeys, minimizeAll, altTab, clipboard, finderPaste, finderTrash, textNav])
     let finderBar = FinderAddressBar()
     private let fullScreenDock = FullScreenDock()
     private lazy var pointerTap = EventTap(name: "pointer", types: [.mouseMoved, .leftMouseDown, .leftMouseUp, .leftMouseDragged],
@@ -39,10 +41,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let eyeCamera = EyeCamera()
     let eyePreview = EyePreview()
     let eyeSwatches = EyeColorSwatches()
+    let fontApps = FontAppIcons()
     private var iconEyeColor: String?
     var statusItem: NSStatusItem!
     var sliders: [BrightnessSliderView] = []
     let settingsPanel = SettingsPanel()
+    // Each starts itself and keeps its own settings, taps and windows.
+    private let features: [Feature] = [StartMenu.shared, LevelOverlay.shared, BackgroundDimmer.shared, InputPerApp.shared, DockScreen.shared]
     // The last reading of Finder control and when the permissions were last read, for the Permissions page.
     var finderState: PermissionCheck.FinderState?
     var permissionsChecked: Date?
@@ -76,6 +81,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         log("accessibility: \(AX.isTrusted ? "granted" : "not granted")")
         lockWarning.start()
+        if let added = try? BundledFont.completeEarlierInstall() { log("font: \(BundledFont.monoFamily) added beside Next, \(added.copied) faces copied") }
+        FontTargets.applyPending()
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didTerminateApplicationNotification,
+                                                          object: nil, queue: .main) { [weak self] _ in
+            FontTargets.applyPending()
+            self?.settingsPanel.reloadIfShown()
+        }
         applyHotKeys()
         windowKeys.isEnabled = Settings.snapEnabled
         windowKeys.keys = Settings.snapKeys
@@ -85,6 +97,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         clipboard.isEnabled = Settings.clipboardKeysEnabled
         textNav.isEnabled = Settings.textNavEnabled
         minimizeAll.isEnabled = Settings.minimizeAllEnabled
+        spotlight.searchKeyEnabled = Settings.spotlightSearchKeyEnabled
+        spotlight.appsKeyEnabled = Settings.spotlightAppsKeyEnabled
+        let spotlightApps = spotlight.onApps
+        spotlight.onApps = { StartMenu.shared.isEnabled ? StartMenu.shared.toggle() : spotlightApps() }
         inputSwitch.isEnabled = Settings.inputSwitchEnabled
         finderPaste.isEnabled = Settings.finderPathPasteEnabled
         finderTrash.isEnabled = Settings.finderTrashKeyEnabled
@@ -100,6 +116,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mice.start()
         applyWheelSpeed()
         layouts.isEnabled = Settings.layoutsEnabled
+        features.forEach { $0.start() }
         brightness.refresh { [brightness] in
             let hardware = brightness.displays.filter(\.hardware).count
             log("brightness: \(brightness.displays.count) screens, \(hardware) on DDC, the rest software")
@@ -143,12 +160,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         mouseTap.update()
         pointerTap.update()
         finderBar.refresh(.window)
+        features.forEach { $0.restartTaps() }
     }
 
     var needsAccess: Bool {
         (Settings.snapEnabled || Settings.altTabMode != .off || Settings.clipboardKeysEnabled
-            || Settings.textNavEnabled || Settings.minimizeAllEnabled || Settings.inputSwitchEnabled || Settings.finderPathPasteEnabled || Settings.finderTrashKeyEnabled
-            || Settings.finderAddressBarEnabled || Settings.fullScreenDockEnabled || Settings.dockWindowMenuEnabled || Settings.writingPadEnabled || Settings.layoutsEnabled || Settings.wheelDragScrollEnabled || mice.wheelSpeed != 1) && !AX.isTrusted
+            || Settings.textNavEnabled || Settings.minimizeAllEnabled || Settings.spotlightSearchKeyEnabled || Settings.spotlightAppsKeyEnabled || Settings.inputSwitchEnabled || Settings.finderPathPasteEnabled || Settings.finderTrashKeyEnabled
+            || Settings.finderAddressBarEnabled || Settings.fullScreenDockEnabled || Settings.dockWindowMenuEnabled || Settings.writingPadEnabled || Settings.layoutsEnabled || Settings.wheelDragScrollEnabled || mice.wheelSpeed != 1
+            || features.contains { $0.wantsAccess }) && !AX.isTrusted
     }
 
     // MARK: Actions
@@ -178,8 +197,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyHotKeys()
     }
 
+    func toggleFontTarget(_ id: String) {
+        let problem = FontTargets.toggle(id)
+        settingsPanel.reloadIfShown()
+        guard let problem else { return }
+        let alert = NSAlert()
+        alert.messageText = problem
+        alert.runModal()
+    }
+
     @objc func toggleBundledFont() {
         let turningOn = !BundledFont.isInstalled()
+        if !turningOn { FontTargets.turnAllOff() }
         do {
             let outcome = turningOn ? try BundledFont.install() : try BundledFont.remove()
             log("font: \(BundledFont.family) \(turningOn ? "on, \(outcome.copied) faces copied" : "off, \(outcome.removed) faces removed")"
@@ -248,6 +277,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleMinimizeAll() {
         Settings.minimizeAllEnabled.toggle()
         minimizeAll.isEnabled = Settings.minimizeAllEnabled
+        keyboardTap.update()
+        if needsAccess { AX.requestAccess() }
+    }
+
+    @objc func toggleSpotlightSearchKey() {
+        Settings.spotlightSearchKeyEnabled.toggle()
+        spotlight.searchKeyEnabled = Settings.spotlightSearchKeyEnabled
+        keyboardTap.update()
+        if needsAccess { AX.requestAccess() }
+    }
+
+    @objc func toggleSpotlightAppsKey() {
+        Settings.spotlightAppsKeyEnabled.toggle()
+        spotlight.appsKeyEnabled = Settings.spotlightAppsKeyEnabled
         keyboardTap.update()
         if needsAccess { AX.requestAccess() }
     }

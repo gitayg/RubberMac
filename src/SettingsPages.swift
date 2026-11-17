@@ -23,6 +23,8 @@ struct SettingsFacts {
     var eye = EyeFacts()
     var fontInstalled = false
     var fontElsewhere = false
+    var fontAvailable = false
+    var fontApps: [FontAppIcons.App] = []
 
     var allSoftware: Bool { !displays.isEmpty && displays.allSatisfy { !$0.hardware } }
 }
@@ -124,6 +126,8 @@ extension AppDelegate {
                              previewAccess: EyePreview.access, previewProblem: eyePreview.problem)
         facts.fontInstalled = BundledFont.isInstalled()
         facts.fontElsewhere = !BundledFont.elsewhere().isEmpty
+        facts.fontAvailable = BundledFont.isAvailable
+        facts.fontApps = facts.fontAvailable ? FontTargets.apps() : []
         return facts
     }
 
@@ -147,7 +151,7 @@ extension AppDelegate {
         return SettingsPage(id: "general", title: "General", symbol: "gearshape", tint: .systemGray, sections: [
             SettingsSection(title: nil, rows: [login]),
             SettingsSection(title: "Updates", rows: updates),
-        ])
+        ] + featureRequestSections(facts))
     }
 
     private func screenSaverPage(_ facts: SettingsFacts) -> SettingsPage {
@@ -180,6 +184,7 @@ extension AppDelegate {
         sections.append(SettingsSection(title: nil, rows: [
             toggle("Brightness Keys ⌃⌥⌘↑ / ⌃⌥⌘↓", #selector(toggleBrightnessKeys), on: Settings.brightnessKeysEnabled),
         ]))
+        sections += levelOverlaySections(facts)
         return SettingsPage(id: "brightness", title: "Brightness", symbol: "sun.max.fill", tint: .systemOrange,
                             sections: sections.filter { !$0.rows.isEmpty })
     }
@@ -190,7 +195,7 @@ extension AppDelegate {
             action(keys.title, #selector(setSnapKeys(_:)), on: keys == Settings.snapKeys, tag: index)
         }
         let marked = facts.camera.map { "Marked on \($0.name)\(facts.cameraConnected ? "" : " (not connected)")" }
-        return SettingsPage(id: "windows", title: "Windows", symbol: "macwindow", tint: .systemBlue, sections: [
+        var sections = [
             SettingsSection(title: "Window Snapping", rows: [
                 accessToggle("Snap to Grid, Maximize, Minimize", #selector(toggleSnap), on: Settings.snapEnabled, facts),
                 popup("Grid", gridItems(current: grid)),
@@ -209,8 +214,10 @@ extension AppDelegate {
                              note: "Moving the pointer to the edge is enough, no push needed"),
                 accessToggle("Click an App in the Dock to Pick Its Window", #selector(toggleDockWindowMenu), on: Settings.dockWindowMenuEnabled, facts,
                              note: "With two or more windows, shows them to choose from"),
-            ]),
-        ])
+            ] + dockScreenRows(facts)),
+        ]
+        sections += backgroundDimSections(facts)
+        return SettingsPage(id: "windows", title: "Windows", symbol: "macwindow", tint: .systemBlue, sections: sections)
     }
 
     private func keyboardPage(_ facts: SettingsFacts) -> SettingsPage {
@@ -229,9 +236,17 @@ extension AppDelegate {
                          note: "Ctrl stays Ctrl in terminals, VS Code and remote desktops"),
             accessToggle("Ctrl-←/→ by Word, Home/End to Line Start/End", #selector(toggleTextNav), on: Settings.textNavEnabled, facts),
             accessToggle("Left Alt-Shift Switches Language", #selector(toggleInputSwitch), on: Settings.inputSwitchEnabled, facts),
+        ]
+        habits += inputPerAppRows(facts)
+        habits += [
             toggle("⌘L Locks the Screen, Like Win+L", #selector(toggleLockKey), on: Settings.lockKeyEnabled,
                    note: "Everywhere, so ⌘L no longer goes to a browser's address bar"),
+            accessToggle("⌘R Opens Spotlight, Like Win+R", #selector(toggleSpotlightSearchKey), on: Settings.spotlightSearchKeyEnabled, facts,
+                         note: "Everywhere but remote desktops, so ⌘R no longer reloads a web page or replies in Mail"),
+            accessToggle("⌘ Alone Opens Apps, Like the Windows Key", #selector(toggleSpotlightAppsKey), on: Settings.spotlightAppsKeyEnabled, facts,
+                         note: "Tap ⌘ and let go without pressing anything else"),
         ]
+        habits += startMenuRows(facts)
         var finder = [
             accessToggle("Paste a Path in Finder to Go There", #selector(toggleFinderPaste), on: Settings.finderPathPasteEnabled, facts,
                          note: "⌘V or Ctrl-V in a Finder window, no ⌘⇧G needed"),
@@ -258,13 +273,18 @@ extension AppDelegate {
         }
         rows.append(button("Open Saved Replies", "Open", #selector(openReplies), closes: true))
         // Installed some other way, a second copy would only list each face twice.
-        let font: SettingsRow = facts.fontElsewhere && !facts.fontInstalled
-            ? .note("\(BundledFont.family) is already installed on this Mac")
-            : toggle("Add \(BundledFont.family) to Every App", #selector(toggleBundledFont), on: facts.fontInstalled,
-                     note: "The Braille Institute's typeface for easy reading, in every app's font list. macOS's own menus keep their font")
+        var font: [SettingsRow] = [facts.fontElsewhere && !facts.fontInstalled
+            ? .note("\(BundledFont.name) is already installed on this Mac")
+            : toggle("Put \(BundledFont.name) in Every App's Font List", #selector(toggleBundledFont), on: facts.fontInstalled,
+                     note: "The Braille Institute's typefaces for easy reading, Next and Mono. macOS's own menus keep their font")]
+        if facts.fontAvailable {
+            fontApps.show(facts.fontApps)
+            fontApps.onToggle = { [weak self] in self?.toggleFontTarget($0) }
+            font.append(SettingsRow(title: "Use It In", note: nil, control: .custom(fontApps)))
+        }
         return SettingsPage(id: "writing", title: "Writing", symbol: "square.and.pencil", tint: .systemPink, sections: [
             SettingsSection(title: nil, rows: rows),
-            SettingsSection(title: "Font", rows: [font]),
+            SettingsSection(title: "Font", rows: font),
         ])
     }
 
@@ -383,30 +403,30 @@ extension AppDelegate {
 
     // MARK: Rows
 
-    private func toggle(_ title: String, _ selector: Selector, on: Bool, note: String? = nil, closes: Bool = false) -> SettingsRow {
+    func toggle(_ title: String, _ selector: Selector, on: Bool, note: String? = nil, closes: Bool = false) -> SettingsRow {
         SettingsRow(title: title, note: note, control: .toggle(on: on), target: self, action: selector, closesPanel: closes)
     }
 
     // Without Accessibility, turning one of these on brings up macOS's question, so the panel gets out of the way.
-    private func accessToggle(_ title: String, _ selector: Selector, on: Bool, _ facts: SettingsFacts, note: String? = nil) -> SettingsRow {
+    func accessToggle(_ title: String, _ selector: Selector, on: Bool, _ facts: SettingsFacts, note: String? = nil) -> SettingsRow {
         toggle(title, selector, on: on, note: note, closes: !facts.permissions.accessibility)
     }
 
-    private func button(_ title: String, _ label: String, _ selector: Selector, note: String? = nil, enabled: Bool = true,
+    func button(_ title: String, _ label: String, _ selector: Selector, note: String? = nil, enabled: Bool = true,
                         closes: Bool = false) -> SettingsRow {
         SettingsRow(title: title, note: note, control: .button(label, enabled: enabled), target: self, action: selector, closesPanel: closes)
     }
 
-    private func popup(_ title: String, _ items: [NSMenuItem], closes: Bool = false) -> SettingsRow {
+    func popup(_ title: String, _ items: [NSMenuItem], closes: Bool = false) -> SettingsRow {
         SettingsRow(title: title, note: nil, control: .popup(items), closesPanel: closes)
     }
 
-    private func action(_ title: String, _ selector: Selector, on: Bool = false, tag: Int = 0) -> NSMenuItem {
+    func action(_ title: String, _ selector: Selector, on: Bool = false, tag: Int = 0) -> NSMenuItem {
         .action(title, selector, target: self, on: on, tag: tag)
     }
 
     // A line in a popup that can't be chosen.
-    private func infoItem(_ title: String) -> NSMenuItem {
+    func infoItem(_ title: String) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
         return item

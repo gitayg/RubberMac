@@ -1,0 +1,10 @@
+{
+  "name": "RubberMAC Requests",
+  "version": "1.0.0",
+  "description": "Feature requests sent from RubberMAC's settings panel",
+  "port": 3000,
+  "be": {
+    "entry": "node server.js",
+    "health": "/api/health"
+  }
+}

@@ -37,9 +37,11 @@ enum SnapGeometry {
     // pressing toward the edge moves on to the neighbouring screen. From a column ↑/↓ go to the cell just
     // above or below the middle, then a row at a time; crossing the middle passes through the full column.
     // ↑ otherwise maximizes (leaving the menu bar and Dock visible); ↓ otherwise minimizes. Every pane keeps
-    // clear of the screen's blocked spot.
+    // clear of the screen's blocked spot. `again` is ⌘↑ pressed on the window the last ⌘↑ moved, still where that
+    // press left it: it maximizes over the whole screen, blocked spot too, so ⌘↑ twice always ends maximized, even
+    // in an app that refused the pane or below a camera that left only a strip above it.
     static func target(for window: CGRect, _ direction: SnapDirection, grid: SnapGrid = .standard,
-                       screens: [ScreenArea]) -> SnapResult? {
+                       screens: [ScreenArea], again: Bool = false) -> SnapResult? {
         guard let current = screen(containing: window, in: screens) else { return nil }
         let slot = slot(of: window, in: current, grid)
         let upper = (grid.rows - 2) / 2
@@ -58,6 +60,7 @@ enum SnapGeometry {
             }
             return .frame(pane(next, grid, column: direction == .left ? grid.columns - 1 : 0, row: row))
         case .up:
+            if again { return .frame(current.visible) }
             guard case .pane(let column, let row) = slot, grid.rows > 1 else { return .frame(full(current)) }
             guard let row else { return .frame(pane(current, grid, column: column, row: upper)) }
             if row == 0 { return .frame(full(current)) }
@@ -130,6 +133,11 @@ enum SnapGeometry {
             side == .left ? $0.frame.maxX <= current.frame.minX + 1 : $0.frame.minX >= current.frame.maxX - 1
         }
         return candidates.min { abs($0.frame.midX - current.frame.midX) < abs($1.frame.midX - current.frame.midX) }
+    }
+
+    // Not moved or resized since the last ⌘↑: still where it asked the window to go, or where the app put it instead.
+    static func pressedAgain(_ window: CGRect, after frames: [CGRect]) -> Bool {
+        frames.contains { isClose(window, $0) }
     }
 
     // Apps like Terminal round their size to whole character cells, so allow some slack.

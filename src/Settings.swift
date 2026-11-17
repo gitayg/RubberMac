@@ -46,6 +46,8 @@ enum Settings {
             "clipboardKeysEnabled": true,
             "textNavEnabled": true,
             "minimizeAllEnabled": true,
+            "spotlightSearchKeyEnabled": true,
+            "spotlightAppsKeyEnabled": true,
             "inputSwitchEnabled": true,
             "wheelSpeed": 1.0,
             "wheelDragScrollEnabled": true,
@@ -127,6 +129,16 @@ enum Settings {
         set { defaults.set(newValue, forKey: "minimizeAllEnabled") }
     }
 
+    static var spotlightSearchKeyEnabled: Bool {
+        get { defaults.bool(forKey: "spotlightSearchKeyEnabled") }
+        set { defaults.set(newValue, forKey: "spotlightSearchKeyEnabled") }
+    }
+
+    static var spotlightAppsKeyEnabled: Bool {
+        get { defaults.bool(forKey: "spotlightAppsKeyEnabled") }
+        set { defaults.set(newValue, forKey: "spotlightAppsKeyEnabled") }
+    }
+
     static var inputSwitchEnabled: Bool {
         get { defaults.bool(forKey: "inputSwitchEnabled") }
         set { defaults.set(newValue, forKey: "inputSwitchEnabled") }
@@ -161,6 +173,11 @@ enum Settings {
     static var lockKeyEnabled: Bool {
         get { defaults.bool(forKey: "lockKeyEnabled") }
         set { defaults.set(newValue, forKey: "lockKeyEnabled") }
+    }
+
+    static var padUsesAtkinson: Bool {
+        get { defaults.bool(forKey: "padUsesAtkinson") }
+        set { defaults.set(newValue, forKey: "padUsesAtkinson") }
     }
 
     static var brightnessKeysEnabled: Bool {

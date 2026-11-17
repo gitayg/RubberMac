@@ -17,6 +17,14 @@ final class WritingPad: NSObject, NSTextViewDelegate, NSWindowDelegate {
     private var hiding = false
 
     var isShown: Bool { panel?.isVisible == true }
+
+    // What's typed and the fixed version, in Atkinson Hyperlegible Next when its icon on the Writing page is on and the
+    // font is on this Mac.
+    static var textFont: NSFont {
+        let size: CGFloat = 14
+        guard Settings.padUsesAtkinson, let font = NSFont(name: PadFont.postScriptName, size: size) else { return .systemFont(ofSize: size) }
+        return font
+    }
     var text: String { draft?.string ?? "" }
 
     // frame: the window being replied in, in AppKit coordinates; the pad sits over its bottom, where the
@@ -26,6 +34,8 @@ final class WritingPad: NSObject, NSTextViewDelegate, NSWindowDelegate {
         self.panel = panel
         if panel.contentView?.subviews.isEmpty != false { panel.contentView = makeContent() }
         heading.stringValue = "Reply in \(app)"
+        draft.font = Self.textFont
+        fixed.font = Self.textFont
         draft.string = text
         showFix(nil)
         panel.setFrameOrigin(Self.origin(over: frame, size: Self.size))
@@ -53,7 +63,7 @@ final class WritingPad: NSObject, NSTextViewDelegate, NSWindowDelegate {
         guard let fix else { fixed.string = ""; return }
         let marked = NSMutableAttributedString()
         for (text, kind) in FixDiff.segments(from: fix.draft, to: fix.fixed) {
-            var style: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 14), .foregroundColor: NSColor.labelColor]
+            var style: [NSAttributedString.Key: Any] = [.font: Self.textFont, .foregroundColor: NSColor.labelColor]
             switch kind {
             case .same: break
             case .added: style[.backgroundColor] = NSColor.systemGreen.withAlphaComponent(0.35)
@@ -61,7 +71,7 @@ final class WritingPad: NSObject, NSTextViewDelegate, NSWindowDelegate {
                 style[.foregroundColor] = NSColor.systemRed
                 style[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
                 marked.append(NSAttributedString(string: String(text.dropLast()), attributes: style))
-                marked.append(NSAttributedString(string: " ", attributes: [.font: NSFont.systemFont(ofSize: 14)]))
+                marked.append(NSAttributedString(string: " ", attributes: [.font: Self.textFont]))
                 continue
             }
             marked.append(NSAttributedString(string: text, attributes: style))
@@ -122,7 +132,7 @@ final class WritingPad: NSObject, NSTextViewDelegate, NSWindowDelegate {
         text.isRichText = false
         text.allowsUndo = true
         text.drawsBackground = false
-        text.font = .systemFont(ofSize: 14)
+        text.font = textFont
         text.textColor = .labelColor
         text.insertionPointColor = .labelColor
         text.textContainerInset = NSSize(width: 6, height: 6)

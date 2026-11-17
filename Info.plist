@@ -15,17 +15,17 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.28.0</string>
+	<string>1.31.0</string>
 	<key>CFBundleVersion</key>
-	<string>35</string>
+	<string>41</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>27.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>When you paste a folder's path in Finder, RubberMAC moves the Finder window to that folder. When you pick Terminal on the Writing page, it sets the font of Terminal's default profile.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>The Eye Color Camera reads your camera to recolour your eyes and sends the picture to the virtual camera, and shows you that picture as a preview.</string>
-	<key>NSAppleEventsUsageDescription</key>
-	<string>When you paste a folder's path in Finder, RubberMAC moves the Finder window to that folder.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 </dict>
