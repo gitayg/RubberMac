@@ -8,12 +8,14 @@ struct CommandTap {
         var keyDowns: UInt32
         var clicks: UInt32
         var scrolls: UInt32
+        // The scrolls RubberMAC's own mouse tap saw, which the system's count misses for some mice.
+        var seen: UInt32 = 0
 
         static func now() -> Counters {
             func count(_ type: CGEventType) -> UInt32 { CGEventSource.counterForEventType(.combinedSessionState, eventType: type) }
             return Counters(keyDowns: count(.keyDown),
                             clicks: count(.leftMouseDown) &+ count(.rightMouseDown) &+ count(.otherMouseDown),
-                            scrolls: count(.scrollWheel))
+                            scrolls: count(.scrollWheel), seen: ScrollSeen.count)
         }
     }
 

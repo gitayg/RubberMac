@@ -32,7 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let mice = MouseProfiles()
     // At session level, so it also sees scrolling that mouse drivers like Logi Options+ post themselves.
     private lazy var mouseTap = EventTap(name: "mouse", types: [.scrollWheel, .otherMouseDown, .otherMouseUp, .otherMouseDragged],
-                                         location: .cgSessionEventTap, handlers: [wheelDrag, wheelSpeed])
+                                         location: .cgSessionEventTap, handlers: [wheelDrag, WheelStyle.shared.handler, wheelSpeed])
     let brightness = Brightness()
     let layouts = LayoutKeeper()
     let updater = Updater()
@@ -47,7 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     var sliders: [BrightnessSliderView] = []
     let settingsPanel = SettingsPanel()
     // Each starts itself and keeps its own settings, taps and windows.
-    private let features: [Feature] = [StartMenu.shared, LevelOverlay.shared, BackgroundDimmer.shared, InputPerApp.shared, DockScreen.shared]
+    private let features: [Feature] = [StartMenu.shared, LevelOverlay.shared, BackgroundDimmer.shared, InputPerApp.shared, DockScreen.shared,
+                                       WheelStyle.shared, WindowReset.shared, OpenOnScreen.shared, ScreenResolution.shared]
     // The last reading of Finder control and when the permissions were last read, for the Permissions page.
     var finderState: PermissionCheck.FinderState?
     var permissionsChecked: Date?

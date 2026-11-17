@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.32.0
+More ideas from MacRumors forum threads.
+- **A mouse wheel that works like Windows.** The wheel can scroll the classic way while the trackpad stays natural, every notch can scroll the same 3 lines however fast you turn it (Logi Options+ mice too), and ⌘ + wheel zooms Google Chrome, Claude and other apps in and out like Ctrl + wheel, without ⌘'s release opening Start; three switches on the Mouse page, the first two off until you turn them on.
+- **Bring lost windows back, or make an app forget its window sizes.** **Bring Windows Back Onto the Screens**, in a new Lost Windows section of the Windows page, moves windows that are mostly off the screens or too big for theirs back on, and **Forget an App's Window Sizes…** quits the app you pick, deletes the window frames it saved, puts its saved windows in the Trash and opens it again: what the Terminal fixes in the MacRumors thread do, in one click.
+- **New windows open on the screen you're using.** **Open Apps and Files on the Screen You're Using**, in the new New Windows section of the Windows page, moves a window that opens on another screen right after you open an app or a file to the screen with the pointer, and **Always Open an App on One Screen** gives an app a screen for all its new windows.
+- **Pick the resolution really sent to each screen, as on Windows.** The Brightness page's new Resolution card lists each screen's real resolutions and refresh rates (not just "Looks like" sizes), and after a change asks "Keep this resolution?" on every screen, going back by itself after 15 seconds.
+- **Fixed: holding ⌘ while scrolling, then letting go, no longer opens Start** with mice whose software posts the wheel's scrolls itself, like Logi Options+.
+
 ## 1.31.0
 Ideas from MacRumors forum threads.
 - **⌘ on its own opens RubberMAC's own Start, in your order, with folders and pins.** Spotlight's Apps view sorts itself and has no folders, pins or right-click. Start lists the same apps and keeps them how you arrange them: type to search straight away and press ↩, drag icons into place, drop one app onto another to make a folder and name it, right-click to pin an app to the top row, show it in Finder or move it to the Trash after a question that names it. New apps join at the end. The app you were in stays in front. Turn it off with **⌘ Alone Opens RubberMAC's Start, Not Spotlight's Apps** on the Keyboard page.

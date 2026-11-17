@@ -181,6 +181,7 @@ extension AppDelegate {
         }
         if facts.allSoftware { rows.append(.note("DisplayLink dock: monitors can't take brightness commands")) }
         var sections = [SettingsSection(title: facts.allSoftware ? "Brightness (software dimming)" : nil, rows: rows)]
+        sections += screenResolutionSections(facts)
         sections.append(SettingsSection(title: nil, rows: [
             toggle("Brightness Keys ⌃⌥⌘↑ / ⌃⌥⌘↓", #selector(toggleBrightnessKeys), on: Settings.brightnessKeysEnabled),
         ]))
@@ -217,6 +218,8 @@ extension AppDelegate {
             ] + dockScreenRows(facts)),
         ]
         sections += backgroundDimSections(facts)
+        sections += windowResetSections(facts)
+        sections += openOnScreenSections(facts)
         return SettingsPage(id: "windows", title: "Windows", symbol: "macwindow", tint: .systemBlue, sections: sections)
     }
 
@@ -310,6 +313,7 @@ extension AppDelegate {
         if !connected.isEmpty { rows.append(.note("Remembered for each mouse model")) }
         if connected.count > 1 { rows.append(.note("The wheel speed used is \(connected.last!)'s, connected last")) }
         rows.append(.note("System Settings stops pointer speed at 3; this goes to \(Int(PointerSpeed.maximum))"))
+        rows += wheelStyleRows(facts)
         rows.append(accessToggle("Hold the Wheel and Move to Scroll, One Direction at a Time", #selector(toggleWheelDrag),
                                  on: Settings.wheelDragScrollEnabled, facts, note: "A quick wheel click is still a middle click"))
         sections.append(SettingsSection(title: nil, rows: rows))

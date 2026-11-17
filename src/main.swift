@@ -58,6 +58,13 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "dockscreen": print(DockScreen.selfTestReport())
     case "dockscreen-live": print(DockScreen.liveSelfTestReport())
     case "requests": print(FeatureRequest.selfTestReport())
+    case "wheelstyle": print(WheelStyle.selfTestReport())
+    case "windowreset": print(WindowReset.selfTestReport())
+    case "windowreset-live": print(WindowReset.liveSelfTestReport())
+    case "openonscreen": print(OpenOnScreen.selfTestReport())
+    case "openonscreen-live": print(OpenOnScreen.liveSelfTestReport())
+    case "resolution": print(ScreenResolution.selfTestReport())
+    case "resolution-live": print(ScreenResolution.liveSelfTestReport())
     case "eyelive":
         // Under the real run loop: EyeCamera's timer and its first-frame callback run on the main thread.
         app.setActivationPolicy(.accessory)

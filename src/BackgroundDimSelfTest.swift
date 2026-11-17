@@ -84,7 +84,9 @@ extension BackgroundDimmer {
         facts.permissions = PermissionCheck(accessibility: false, screenRecording: true, finder: .on, finderUsed: true)
         check(rows(.off).first?.closesPanel == true, "without it, choosing closes the panel for macOS's question")
         let windows = delegate.settingsPages(SettingsFacts()).first { $0.id == "windows" }
-        check(windows?.sections.last?.title == "Background Windows", "the card is the last on the Windows page")
+        let titles = windows?.sections.map(\.title) ?? []
+        check(titles.firstIndex(of: "Dock").map { $0 + 1 < titles.count && titles[$0 + 1] == "Background Windows" } == true,
+              "the card comes right after the Dock card on the Windows page (\(titles.map { $0 ?? "-" }.joined(separator: ", ")))")
     }
 
     private static func frontChecks(_ check: Check) {
