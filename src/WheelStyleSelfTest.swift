@@ -3,10 +3,10 @@ import AppKit
 // --selftest wheelstyle: made-up scroll events fed straight to the handler, nothing posted. Off, untouched; turned the
 // classic way only with Natural scrolling on; one notch's distance for a slow and a fast notch, Logi Options+'s too;
 // trackpad, momentum, WheelDragScroll's and a smoothing driver's steps untouched; horizontal and ⇧ + wheel like
-// vertical; ⌘ + wheel zooming through a made-up menu and a recorded key press, without its ⌘ opening Start; the Mouse
+// vertical; ⌘ + wheel zooming through a made-up menu and a recorded press, without its ⌘ opening Start; the Mouse
 // page's rows. Changes no setting.
-// What a scroll costs the handler: WheelStyleCost.swift. --selftest wheelstyle menus: WheelStyleMenus.swift.
-// --selftest wheelstyle probe: WheelStyleProbe.swift.
+// The presses' queue: WheelStylePressSelfTest.swift. What a scroll costs the handler: WheelStyleCost.swift.
+// --selftest wheelstyle menus: WheelStyleMenus.swift. --selftest wheelstyle probe: WheelStyleProbe.swift.
 extension WheelStyle {
     static func selfTestReport() -> String {
         switch CommandLine.arguments.last {
@@ -26,6 +26,8 @@ extension WheelStyle {
         WheelStyleChecks.restyle(check)
         WheelStyleChecks.zoom(check)
         WheelStyleChecks.menus(check)
+        WheelStyleChecks.cache(check)
+        WheelStyleChecks.presses(check)
         WheelStyleChecks.rows(check)
         WheelStyleCost.measure(check)
 
@@ -376,21 +378,6 @@ enum WheelStyleChecks {
         let noShortcut = [entry("Zoom In", nil, menu: 2), entry("Zoom Out", nil, menu: 2)]
         check(found(noShortcut) == "Zoom In none, Zoom Out none", "titles alone, no shortcuts: found, to be pressed through Accessibility")
         check(found([entry("Zoom In", "+")]) == "none", "a Zoom In with no Zoom Out is not enough")
-
-        // The key that's posted, from this Mac's Latin keyboard layout.
-        let cmd = CGEventFlags.maskCommand
-        func stroke(_ key: String?, _ modifiers: Int = 0) -> String {
-            guard let s = ZoomKeys.stroke(for: ZoomItem(title: "", key: key, modifiers: modifiers)) else { return "none" }
-            let mods = (s.flags.contains(.maskControl) ? "⌃" : "") + (s.flags.contains(.maskAlternate) ? "⌥" : "")
-                + (s.flags.contains(.maskShift) ? "⇧" : "") + (s.flags.contains(cmd) ? "⌘" : "")
-            return "\(mods) key \(s.code) \"\(s.character)\""
-        }
-        check(stroke("+") == "⇧⌘ key 24 \"+\"", "⌘+ is posted as ⌘⇧= (key 24) with the character +, as typed: \(stroke("+"))")
-        check(stroke("=") == "⌘ key 24 \"=\"", "⌘= as ⌘= (key 24): \(stroke("="))")
-        check(stroke("-") == "⌘ key 27 \"-\"" && stroke("−") == "⌘ key 27 \"-\"", "⌘- and a minus sign ⌘− as ⌘- (key 27): \(stroke("−"))")
-        check(stroke("+", 2) == "⌥⇧⌘ key 24 \"+\"", "the item's own ⌥ is kept: \(stroke("+", 2))")
-        check(stroke(".", 1) == "⇧⌘ key 47 \">\"", "TextEdit's ⇧⌘. as key 47 with ⇧, typing >, as a real press does: \(stroke(".", 1))")
-        check(stroke(nil) == "none" && stroke("+", 8) == "none", "no shortcut, or one without ⌘: pressed through Accessibility instead")
     }
 
     // MARK: The Mouse page

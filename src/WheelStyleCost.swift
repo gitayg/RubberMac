@@ -10,7 +10,7 @@ enum WheelStyleCost {
         // A real cache already holding a made-up app's menus, the path a ⌘ + wheel takes once an app's menus are read.
         let cache = ZoomMenuCache()
         cache.report = { _ in }
-        cache.read = { _ in ZoomMenu(zoomIn: ZoomItem(title: "Zoom In", key: "+"), zoomOut: ZoomItem(title: "Zoom Out", key: "-")) }
+        cache.read = { _ in .read(ZoomMenu(zoomIn: ZoomItem(title: "Zoom In", key: "+"), zoomOut: ZoomItem(title: "Zoom Out", key: "-"))) }
         let pid: pid_t = 99_999
         let deadline = Date(timeIntervalSinceNow: 2)
         while Date() < deadline, case .reading = cache.lookup(pid) { RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.01)) }

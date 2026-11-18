@@ -1,79 +1,82 @@
 import AppKit
-import Carbon.HIToolbox
 
-// Presses a zoom item's own shortcut in its app, or the item itself when the shortcut can't be typed.
+// Presses a zoom item in its app through Accessibility, as choosing it from the menu does, not by typing its shortcut:
+// in Claude, ⌘⇧= posted to its process (with + as the character) did nothing and ⌘- didn't zoom out, while pressing the
+// items zoomed it in and back out (--selftest wheelzoom-live).
 enum ZoomKeys {
-    struct Stroke: Equatable {
-        var code: CGKeyCode
-        var flags: CGEventFlags
-        // What the key types with ⇧ or without, as a real press carries it: + for ⌘⇧=, > for ⇧⌘.
-        var character: String
-    }
+    static let presser = ZoomPresser()
 
-    // The key that types the character, ⇧ if it needs it, and the item's own modifiers. Some apps show the minus key
-    // as a minus sign.
-    static func stroke(for item: ZoomItem) -> Stroke? {
-        guard let shown = item.key, item.modifiers & 8 == 0 else { return nil }
-        guard let key = key(shown == "−" ? "-" : shown) else { return nil }
-        var flags = CGEventFlags.maskCommand
-        let shift = key.shift || item.modifiers & 1 != 0
-        if shift { flags.insert(.maskShift) }
-        if item.modifiers & 2 != 0 { flags.insert(.maskAlternate) }
-        if item.modifiers & 4 != 0 { flags.insert(.maskControl) }
-        guard let typed = typed(key.code, shift: shift) else { return nil }
-        return Stroke(code: key.code, flags: flags, character: typed)
-    }
-
-    // To the app's own process, so it lands there even if another app comes forward meanwhile.
     static func press(_ item: ZoomItem, in pid: pid_t) {
-        guard let stroke = stroke(for: item) else {
-            // Off the tap's thread, which a busy app could otherwise hold up for as long as it takes to answer.
-            guard let element = item.element else { return }
-            DispatchQueue.global(qos: .userInitiated).async {
-                AXUIElementSetMessagingTimeout(element, 0.5)
-                AXUIElementPerformAction(element, kAXPressAction as CFString)
-            }
-            return
+        presser.press(item, in: pid)
+    }
+}
+
+// One press at a time, in the order they came, on a queue of its own: the tap's thread never waits for another app to
+// answer, and a zoom in then out can't land the other way round. An app that hangs gets at most `limit` presses waiting,
+// and none is sent to it while it doesn't answer: the notches meanwhile are dropped, not saved up for when it wakes.
+final class ZoomPresser {
+    static let limit = 2
+    // Each item's own, never the system-wide one: a press that waits longer gives up.
+    static let timeout: Float = 0.5
+
+    var limit = ZoomPresser.limit
+    var queue = DispatchQueue(label: "wheel zoom presses", qos: .userInitiated)
+    var ask: (AXUIElement) -> AXError = ZoomPresser.askEnabled
+    var pressElement: (AXUIElement) -> AXError = ZoomPresser.axPress
+    var read: (pid_t) -> [ZoomMenus.Entry]? = ZoomMenus.read
+    private let lock = NSLock()
+    private var pending = 0
+    // The zoom items read again after an app built its menus anew, until the cache's own next read. On the queue only.
+    private var found: [pid_t: [ZoomItem]] = [:]
+
+    // false when dropped: too many presses still waiting.
+    @discardableResult
+    func press(_ item: ZoomItem, in pid: pid_t) -> Bool {
+        lock.lock()
+        guard pending < limit else {
+            lock.unlock()
+            return false
         }
-        var characters = Array(stroke.character.utf16)
-        for down in [true, false] {
-            guard let event = CGEvent(keyboardEventSource: nil, virtualKey: stroke.code, keyDown: down) else { continue }
-            event.flags = stroke.flags
-            event.keyboardSetUnicodeString(stringLength: characters.count, unicodeString: &characters)
-            event.postToPid(pid)
+        pending += 1
+        lock.unlock()
+        queue.async {
+            self.pressNow(item, pid)
+            self.lock.lock()
+            self.pending -= 1
+            self.lock.unlock()
         }
+        return true
     }
 
-    // Main keys only (codes under 64): the keypad's + and = would be found first, and aren't the shortcut.
-    static func key(_ character: String) -> (code: CGKeyCode, shift: Bool)? {
-        guard let layout = layout() else { return nil }
-        for shift in [false, true] {
-            for code in 0..<CGKeyCode(64) where typed(code, shift: shift, layout) == character { return (code, shift) }
+    // The item is asked whether it's enabled before it's pressed, as measured in a scratch app: AppKit presses an item
+    // only if it was enabled when it last checked, and being asked makes it check again (at most once a second). An app
+    // that doesn't answer gets no press, as one that times out still lands once the app wakes. An item gone since its
+    // menus were read (Claude built its menus anew three minutes into a six-minute watch) is found again by its title
+    // and shortcut.
+    private func pressNow(_ item: ZoomItem, _ pid: pid_t) {
+        guard let element = item.element else { return }
+        func send(_ element: AXUIElement) -> AXError {
+            let asked = ask(element)
+            if asked != .cannotComplete, asked != .invalidUIElement { _ = pressElement(element) }
+            return asked
         }
-        return nil
-    }
-
-    static func typed(_ code: CGKeyCode, shift: Bool) -> String? {
-        layout().flatMap { typed(code, shift: shift, $0) }
-    }
-
-    // The Latin layout in use (U.S., ABC, British…), the one ⌘ shortcuts go by with Hebrew on too.
-    private static func layout() -> Data? {
-        guard let source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource()?.takeRetainedValue(),
-              let data = TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData) else { return nil }
-        return Unmanaged<CFData>.fromOpaque(data).takeUnretainedValue() as Data
-    }
-
-    private static func typed(_ code: CGKeyCode, shift: Bool, _ layout: Data) -> String? {
-        layout.withUnsafeBytes { bytes -> String? in
-            var dead: UInt32 = 0
-            var chars = [UniChar](repeating: 0, count: 4)
-            var length = 0
-            let state = shift ? UInt32(shiftKey >> 8) & 0xFF : 0
-            guard UCKeyTranslate(bytes.bindMemory(to: UCKeyboardLayout.self).baseAddress!, code, UInt16(kUCKeyActionDown), state,
-                                 UInt32(LMGetKbdType()), OptionBits(kUCKeyTranslateNoDeadKeysBit), &dead, 4, &length, &chars) == noErr,
-                  length > 0 else { return nil }
-            return String(utf16CodeUnits: chars, count: length)
+        guard send(element) == .invalidUIElement else { return }
+        func match(_ items: [ZoomItem]?) -> AXUIElement? {
+            items?.first { $0.title == item.title && $0.key == item.key && $0.modifiers == item.modifiers }?.element
         }
+        if let kept = match(found[pid]), send(kept) != .invalidUIElement { return }
+        found[pid] = read(pid)?.map(\.item).filter(ZoomMenus.looksLikeZoom)
+        if let fresh = match(found[pid]) { _ = send(fresh) }
+    }
+
+    static func axPress(_ element: AXUIElement) -> AXError {
+        AXUIElementSetMessagingTimeout(element, timeout)
+        return AXUIElementPerformAction(element, kAXPressAction as CFString)
+    }
+
+    static func askEnabled(_ element: AXUIElement) -> AXError {
+        AXUIElementSetMessagingTimeout(element, timeout)
+        var enabled: CFTypeRef?
+        return AXUIElementCopyAttributeValue(element, kAXEnabledAttribute as CFString, &enabled)
     }
 }

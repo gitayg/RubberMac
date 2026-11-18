@@ -17,12 +17,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let finderTrash = FinderTrashKey()
     private let padKeys = WritingPadKeys()
     private let dockPicker = DockWindowPicker()
+    private let secureInputKeys = SecureInputKeys()
     // spotlight and inputSwitch go first: they must see keys a later handler swallows. spotlight takes only ⌘R, held
     // with nothing else, when inputSwitch's Alt-Shift can't be under way; inputSwitch only watches. finderPaste comes
-    // after clipboard, so a Ctrl-V reaches it as ⌘V.
+    // after clipboard, so a Ctrl-V reaches it as ⌘V. secureInputKeys, before them all, only watches ⌘, Ctrl and Alt.
     private lazy var keyboardTap = EventTap(name: "keyboard", types: [.keyDown, .keyUp, .flagsChanged],
                                             location: .cghidEventTap, ownThread: true,
-                                            handlers: [spotlight, inputSwitch, InputPerApp.shared.keys, dockPicker.keys, padKeys, windowKeys, minimizeAll, altTab, clipboard, finderPaste, finderTrash, textNav])
+                                            handlers: secureInputKeys.watching([spotlight, inputSwitch, InputPerApp.shared.keys, dockPicker.keys, padKeys, windowKeys, minimizeAll, altTab, clipboard, finderPaste, finderTrash, textNav, SpotlightFilter.shared.keys]))
     let finderBar = FinderAddressBar()
     private let fullScreenDock = FullScreenDock()
     private lazy var pointerTap = EventTap(name: "pointer", types: [.mouseMoved, .leftMouseDown, .leftMouseUp, .leftMouseDragged],
@@ -43,12 +44,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let eyeSwatches = EyeColorSwatches()
     let fontApps = FontAppIcons()
     private var iconEyeColor: String?
+    private var iconSecureInput: String?
     var statusItem: NSStatusItem!
     var sliders: [BrightnessSliderView] = []
     let settingsPanel = SettingsPanel()
     // Each starts itself and keeps its own settings, taps and windows.
     private let features: [Feature] = [StartMenu.shared, LevelOverlay.shared, BackgroundDimmer.shared, InputPerApp.shared, DockScreen.shared,
-                                       WheelStyle.shared, WindowReset.shared, OpenOnScreen.shared, ScreenResolution.shared]
+                                       WheelStyle.shared, WindowReset.shared, OpenOnScreen.shared, ScreenResolution.shared,
+                                       SpotlightFilter.shared]
     // The last reading of Finder control and when the permissions were last read, for the Permissions page.
     var finderState: PermissionCheck.FinderState?
     var permissionsChecked: Date?
@@ -102,6 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         spotlight.appsKeyEnabled = Settings.spotlightAppsKeyEnabled
         let spotlightApps = spotlight.onApps
         spotlight.onApps = { StartMenu.shared.isEnabled ? StartMenu.shared.toggle() : spotlightApps() }
+        setUpSecureInputNotice()
         inputSwitch.isEnabled = Settings.inputSwitchEnabled
         finderPaste.isEnabled = Settings.finderPathPasteEnabled
         finderTrash.isEnabled = Settings.finderTrashKeyEnabled
@@ -142,13 +146,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Shows the eye colour as a dot on the menu-bar icon while the Eye Color Camera is on.
+    /// Shows the eye colour as a dot on the menu-bar icon while the Eye Color Camera is on, and a "!" while Secure
+    /// Input hides the keys.
     private func updateStatusIcon() {
         let shown = eyeCamera.isOn ? eyeCamera.color : nil
-        guard shown != iconEyeColor else { return }
+        let blocked = SecureInputMonitor.shared.notice.map { _ in SecureInputMonitor.shared.holder?.displayName ?? "an app" }
+        guard shown != iconEyeColor || blocked != iconSecureInput else { return }
         iconEyeColor = shown
+        iconSecureInput = blocked
         let color = shown.flatMap(EyeCamera.rgb(for:)).map { NSColor(srgbRed: $0.0, green: $0.1, blue: $0.2, alpha: 1) }
-        statusItem.button?.image = StatusIcon.image(eyeColor: color)
+        statusItem.button?.image = StatusIcon.image(eyeColor: color, secureInputHolder: blocked)
+    }
+
+    private func setUpSecureInputNotice() {
+        SecureInputMonitor.shared.isWatching = { [weak self] in self?.keyboardTap.isRunning == true }
+        SecureInputMonitor.shared.onChange = { [weak self] in
+            self?.updateStatusIcon()
+            self?.settingsPanel.reloadIfShown()
+        }
+        // The notice says it once per episode instead of a line for each ⌘ press.
+        spotlight.onAppsUnseen = { SecureInputMonitor.shared.noteOn() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

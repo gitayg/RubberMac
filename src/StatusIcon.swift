@@ -3,20 +3,24 @@ import AppKit
 /// Menu-bar glyph: the app icon's display, left half lit (a snapped window), a clock in
 /// the right half. Drawn per backing scale so 1x and 2x both land on whole pixels.
 /// While the Eye Color Camera is on, a dot in the eye colour sits in the bottom-right corner.
+/// While Secure Input hides the keys from RubberMAC, an orange "!" sits in the top-right one (SecureInputBadge).
 enum StatusIcon {
-    static func image(eyeColor: NSColor? = nil) -> NSImage {
+    static func image(eyeColor: NSColor? = nil, secureInputHolder: String? = nil) -> NSImage {
+        let plain = eyeColor == nil && secureInputHolder == nil
         let image = NSImage(size: NSSize(width: 18, height: 18), flipped: false) { _ in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             let t = ctx.userSpaceToDeviceSpaceTransform
             // A coloured dot can't be a template image, so then the glyph takes the menu bar's text
             // colour itself (resolved here, at draw time, for a light or dark menu bar).
             draw(in: ctx, layout: hypot(t.a, t.b) >= 1.5 ? .retina : .standard,
-                 glyph: eyeColor == nil ? .black : .labelColor)
+                 glyph: plain ? .black : .labelColor)
             if let eyeColor { drawDot(in: ctx, color: eyeColor) }
+            if secureInputHolder != nil { SecureInputBadge.draw(in: ctx) }
             return true
         }
-        image.isTemplate = eyeColor == nil
-        image.accessibilityDescription = eyeColor == nil ? "RubberMAC" : "RubberMAC, Eye Color Camera on"
+        image.isTemplate = plain
+        image.accessibilityDescription = (eyeColor == nil ? "RubberMAC" : "RubberMAC, Eye Color Camera on")
+            + (secureInputHolder.map { ", keys blocked by Secure Input in \($0)" } ?? "")
         return image
     }
 

@@ -80,11 +80,12 @@ enum ZoomMenus {
     }
 
     // Menu bar, its menus and up to two levels of submenus, skipping the Apple menu. Off the main thread: an app
-    // answers on its own main thread, and a busy one can take a while.
-    static func read(_ pid: pid_t) -> [Entry] {
+    // answers on its own main thread, and a busy one can take a while. nil when there was nothing to read: no menu bar
+    // or an empty one, as an app has in the first moments after it opens (Claude's read in 0 ms as it relaunched).
+    static func read(_ pid: pid_t) -> [Entry]? {
         let app = AXUIElementCreateApplication(pid)
         AXUIElementSetMessagingTimeout(app, 1)
-        guard let bar = element(app, kAXMenuBarAttribute) else { return [] }
+        guard let bar = element(app, kAXMenuBarAttribute) else { return nil }
         var entries: [Entry] = []
         var menus = 0
         func walk(_ menu: AXUIElement, depth: Int) {
@@ -104,7 +105,7 @@ enum ZoomMenus {
         for top in children(bar).dropFirst() {
             if let menu = children(top).first { walk(menu, depth: 1) }
         }
-        return entries
+        return entries.isEmpty ? nil : entries
     }
 
     private static func element(_ element: AXUIElement, _ attribute: String) -> AXUIElement? {
@@ -122,50 +123,86 @@ enum ZoomMenus {
 }
 
 // Each app's Zoom In and Zoom Out, read in the background and kept a while, so a scroll never waits on Accessibility.
-// Main thread.
+// An app whose menus can't be read yet is tried again shortly, not taken as having no zoom. Main thread.
 final class ZoomMenuCache {
+    // What a read found: the app's zoom or none (nil), or nothing to go by yet.
+    enum Read {
+        case failed
+        case read(ZoomMenu?)
+    }
+
     // Menus rarely change; an app found with none may still be building its menus, so it's read again sooner.
     static let fresh: TimeInterval = 300
     static let freshNone: TimeInterval = 30
+    // An app just opened has no menu bar to read for a moment: tried again every second, for half a minute.
+    static let retry: TimeInterval = 1
+    static let tries = 30
 
-    var read: (pid_t) -> ZoomMenu? = { ZoomMenus.pick(ZoomMenus.read($0)) }
+    var read: (pid_t) -> Read = { pid in ZoomMenus.read(pid).map { .read(ZoomMenus.pick($0)) } ?? .failed }
     var report: (String) -> Void = { log($0) }
+    var after: (TimeInterval, @escaping () -> Void) -> Void = { delay, work in DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work) }
+    var now: () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
+    var reader = DispatchQueue(label: "wheel zoom menus", qos: .userInitiated)
     private var known: [pid_t: (lookup: ZoomLookup, at: TimeInterval)] = [:]
     private var reading: Set<pid_t> = []
-    private let queue = DispatchQueue(label: "wheel zoom menus", qos: .userInitiated)
+    private var failures: [pid_t: Int] = [:]
 
     // What's known now; read again in the background if it's missing or old.
     func lookup(_ pid: pid_t) -> ZoomLookup {
-        let now = ProcessInfo.processInfo.systemUptime
         let entry = known[pid]
         let age: TimeInterval
         if case .found = entry?.lookup { age = Self.fresh } else { age = Self.freshNone }
-        if entry.map({ now - $0.at > age }) ?? true { refresh(pid) }
+        if entry.map({ now() - $0.at > age }) ?? true { refresh(pid) }
         return entry?.lookup ?? .reading
     }
 
     func forget(_ pid: pid_t) {
         known[pid] = nil
+        failures[pid] = nil
     }
 
     private func refresh(_ pid: pid_t) {
         guard pid > 0, !reading.contains(pid) else { return }
         reading.insert(pid)
         let read = self.read
-        queue.async { [weak self] in
-            let start = ProcessInfo.processInfo.systemUptime
-            let menu = read(pid)
-            let took = Int((ProcessInfo.processInfo.systemUptime - start) * 1000)
-            DispatchQueue.main.async {
-                guard let self else { return }
-                let first = self.known[pid] == nil
-                self.reading.remove(pid)
-                self.known[pid] = (menu.map { .found($0) } ?? .none, ProcessInfo.processInfo.systemUptime)
-                guard first else { return }
-                let app = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier ?? "pid \(pid)"
-                self.report("wheel zoom: \(app) " + (menu.map { "zooms with \($0.zoomIn.title) \($0.zoomIn.shortcut) and \($0.zoomOut.title) \($0.zoomOut.shortcut)" }
-                    ?? "has no Zoom In and Zoom Out") + " (menus read in \(took) ms)")
-            }
+        let now = self.now
+        reader.async { [weak self] in
+            let start = now()
+            let result = read(pid)
+            let took = Int((now() - start) * 1000)
+            DispatchQueue.main.async { self?.finished(pid, result, took: took) }
         }
+    }
+
+    private func finished(_ pid: pid_t, _ result: Read, took: Int) {
+        reading.remove(pid)
+        let app = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier ?? "pid \(pid)"
+        guard case .read(let menu) = result else {
+            // A read again that fails keeps what was found before, until it's next due.
+            if known[pid] != nil {
+                known[pid]?.at = now()
+                return
+            }
+            let tried = (failures[pid] ?? 0) + 1
+            failures[pid] = tried
+            if tried < Self.tries {
+                // Still unknown, so a scroll goes by as it came meanwhile; the next try needs no scroll to start it.
+                after(Self.retry) { [weak self] in
+                    guard let self, self.failures[pid] != nil else { return }
+                    self.refresh(pid)
+                }
+                return
+            }
+            failures[pid] = nil
+            known[pid] = (.none, now())
+            report("wheel zoom: \(app)'s menus couldn't be read in \(tried) tries; trying again in \(Int(Self.freshNone)) s")
+            return
+        }
+        let first = known[pid] == nil
+        let tries = failures.removeValue(forKey: pid).map { " after \($0 + 1) tries" } ?? ""
+        known[pid] = (menu.map { .found($0) } ?? .none, now())
+        guard first else { return }
+        report("wheel zoom: \(app) " + (menu.map { "zooms with \($0.zoomIn.title) \($0.zoomIn.shortcut) and \($0.zoomOut.title) \($0.zoomOut.shortcut)" }
+            ?? "has no Zoom In and Zoom Out") + " (menus read in \(took) ms\(tries))")
     }
 }

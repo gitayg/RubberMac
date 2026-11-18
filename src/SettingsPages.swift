@@ -148,7 +148,7 @@ extension AppDelegate {
         if let status = Self.updateStatus(facts.update) { updates.append(.note(status)) }
         let login = toggle("Open at Login", #selector(toggleLogin), on: facts.login == .enabled,
                            note: facts.login == .requiresApproval ? "Approve in System Settings › Login Items" : nil)
-        return SettingsPage(id: "general", title: "General", symbol: "gearshape", tint: .systemGray, sections: [
+        return SettingsPage(id: "general", title: "General", symbol: "gearshape", tint: .systemGray, sections: secureInputSections(facts) + [
             SettingsSection(title: nil, rows: [login]),
             SettingsSection(title: "Updates", rows: updates),
         ] + featureRequestSections(facts))
@@ -250,6 +250,7 @@ extension AppDelegate {
                          note: "Tap ⌘ and let go without pressing anything else"),
         ]
         habits += startMenuRows(facts)
+        habits += spotlightFilterRows(facts)
         var finder = [
             accessToggle("Paste a Path in Finder to Go There", #selector(toggleFinderPaste), on: Settings.finderPathPasteEnabled, facts,
                          note: "⌘V or Ctrl-V in a Finder window, no ⌘⇧G needed"),
@@ -261,7 +262,7 @@ extension AppDelegate {
         if facts.finderDenied {
             finder.append(button("Let RubberMAC Move Finder Windows…", "Open", #selector(allowFinderControl), closes: true))
         }
-        return SettingsPage(id: "keyboard", title: "Keyboard", symbol: "keyboard", tint: .systemGray, sections: [
+        return SettingsPage(id: "keyboard", title: "Keyboard", symbol: "keyboard", tint: .systemGray, sections: secureInputSections(facts) + [
             SettingsSection(title: "PC Keyboard Habits", rows: habits),
             SettingsSection(title: "Finder", rows: finder),
         ])

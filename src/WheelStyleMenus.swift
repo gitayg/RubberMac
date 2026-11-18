@@ -1,7 +1,8 @@
 import AppKit
 
-// --selftest wheelstyle menus: what the zoom finds in each running app's menus on this Mac, and the key it would post,
-// read through Accessibility the way the feature reads them. Reads only: no menu is opened, pressed or posted to.
+// --selftest wheelstyle menus: what the zoom finds in each running app's menus on this Mac, and whether each item takes
+// the press a step makes, read through Accessibility the way the feature reads them. Reads only: no menu is opened,
+// pressed or posted to.
 enum WheelStyleMenus {
     // The apps the zoom is meant for; each must be found when it's running.
     static let expected: [String: String] = [
@@ -17,13 +18,13 @@ enum WheelStyleMenus {
             if !ok { failures += 1 }
             lines.append("\(ok ? "ok  " : "FAIL") \(what)")
         }
-        func posted(_ item: ZoomItem) -> String {
-            guard let stroke = ZoomKeys.stroke(for: item) else { return "pressed through Accessibility" }
-            let flags = stroke.flags
-            let mods = (flags.contains(.maskControl) ? "⌃" : "") + (flags.contains(.maskAlternate) ? "⌥" : "")
-                + (flags.contains(.maskShift) ? "⇧" : "") + (flags.contains(.maskCommand) ? "⌘" : "")
-            return "posts \(mods) key \(stroke.code) \"\(stroke.character)\""
+        // The item lists Accessibility's press among its actions.
+        func pressable(_ item: ZoomItem) -> Bool {
+            var names: CFArray?
+            guard let element = item.element, AXUIElementCopyActionNames(element, &names) == .success else { return false }
+            return (names as? [String])?.contains(kAXPressAction) == true
         }
+        func takes(_ item: ZoomItem) -> String { pressable(item) ? "pressable" : "NOT PRESSABLE" }
         let apps = NSWorkspace.shared.runningApplications.filter { $0.activationPolicy == .regular }
             .sorted { ($0.localizedName ?? "") < ($1.localizedName ?? "") }
         var seen: Set<String> = []
@@ -35,18 +36,19 @@ enum WheelStyleMenus {
                 continue
             }
             let start = ProcessInfo.processInfo.systemUptime
-            let entries = ZoomMenus.read(app.processIdentifier)
+            let entries = ZoomMenus.read(app.processIdentifier) ?? []
             let took = Int((ProcessInfo.processInfo.systemUptime - start) * 1000)
             // Only items that look like a zoom are named: a Window menu lists window titles, which stay out of the report.
             let candidates = entries.filter { ZoomMenus.looksLikeZoom($0.item) }.map { "\($0.item.title) \($0.item.shortcut) [menu \($0.menu)]" }
             let menu = ZoomMenus.pick(entries)
             lines.append("\(name): \(entries.count) items read in \(took) ms; looks like zoom: "
                          + (candidates.isEmpty ? "nothing" : candidates.joined(separator: ", ")) + " → "
-                         + (menu.map { "\($0.zoomIn.title) \($0.zoomIn.shortcut) \(posted($0.zoomIn)); \($0.zoomOut.title) \($0.zoomOut.shortcut) \(posted($0.zoomOut))" }
+                         + (menu.map { "\($0.zoomIn.title) \($0.zoomIn.shortcut) \(takes($0.zoomIn)); \($0.zoomOut.title) \($0.zoomOut.shortcut) \(takes($0.zoomOut))" }
                             ?? "no zoom, ⌘ + wheel goes by untouched"))
             if let expectedName = expected[id] {
                 seen.insert(id)
-                check(menu != nil, "\(expectedName) (pid \(app.processIdentifier)): Zoom In and Zoom Out found")
+                check(menu.map { pressable($0.zoomIn) && pressable($0.zoomOut) } == true,
+                      "\(expectedName) (pid \(app.processIdentifier)): Zoom In and Zoom Out found, each pressable through Accessibility")
             }
         }
         for (id, name) in expected.sorted(by: { $0.value < $1.value }) where !seen.contains(id) {

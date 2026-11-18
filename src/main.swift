@@ -47,6 +47,47 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "fonttargets-live": print(FontTargetsLiveSelfTest.report())
     case "spotlightkeys": print(SpotlightKeys.selfTestReport())
     case "spotlightkeys-live": print(SpotlightKeys.liveSelfTestReport())
+    case "spotlightfilter": print(SpotlightFilter.selfTestReport())
+    case "spotlightfilter-live":
+        // Under the real run loop, so Spotlight's Accessibility notifications arrive.
+        app.setActivationPolicy(.accessory)
+        RunLoop.main.perform {
+            print(SpotlightFilter.liveSelfTestReport())
+            exit(0)
+        }
+        app.run()
+    case "spotlightfilter-typing":
+        // Under the real run loop, so Spotlight's Accessibility notifications arrive.
+        app.setActivationPolicy(.accessory)
+        RunLoop.main.perform {
+            print(SpotlightFilterProbe.typingReport(external: i + 2 < args.count && args[i + 2] == "external"))
+            exit(0)
+        }
+        app.run()
+    case "spotlightfilter-direct":
+        // Under the real run loop, so Spotlight's Accessibility notifications arrive.
+        app.setActivationPolicy(.accessory)
+        RunLoop.main.perform {
+            print(SpotlightFilterDirect.report())
+            exit(0)
+        }
+        app.run()
+    case "spotlightfilter-host":
+        // Under the real run loop, so Spotlight's Accessibility notifications arrive.
+        app.setActivationPolicy(.accessory)
+        RunLoop.main.perform {
+            print(SpotlightFilterHost.run(seconds: i + 2 < args.count ? Double(args[i + 2]) ?? 90 : 90, stopFile: i + 3 < args.count ? args[i + 3] : nil))
+            exit(0)
+        }
+        app.run()
+    case "spotlightfilter-probe":
+        // Under the real run loop, so Spotlight's Accessibility notifications arrive.
+        app.setActivationPolicy(.accessory)
+        RunLoop.main.perform {
+            print(SpotlightFilterProbe.report())
+            exit(0)
+        }
+        app.run()
     case "startmenu": print(StartMenu.selfTestReport())
     case "startmenu-live": print(StartMenu.liveSelfTestReport())
     case "overlay": print(LevelOverlay.selfTestReport())
@@ -59,12 +100,16 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "dockscreen-live": print(DockScreen.liveSelfTestReport())
     case "requests": print(FeatureRequest.selfTestReport())
     case "wheelstyle": print(WheelStyle.selfTestReport())
+    case "wheelzoom-probe": print(WheelStyle.zoomProbeReport())
+    case "wheelzoom-live": print(WheelStyle.zoomLiveSelfTestReport())
     case "windowreset": print(WindowReset.selfTestReport())
     case "windowreset-live": print(WindowReset.liveSelfTestReport())
     case "openonscreen": print(OpenOnScreen.selfTestReport())
     case "openonscreen-live": print(OpenOnScreen.liveSelfTestReport())
     case "resolution": print(ScreenResolution.selfTestReport())
     case "resolution-live": print(ScreenResolution.liveSelfTestReport())
+    case "secureinput": print(SecureInput.selfTestReport())
+    case "secureinput-live": print(SecureInput.liveSelfTestReport())
     case "eyelive":
         // Under the real run loop: EyeCamera's timer and its first-frame callback run on the main thread.
         app.setActivationPolicy(.accessory)
