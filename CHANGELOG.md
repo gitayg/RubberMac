@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.1
+- **The "!" on the menu-bar icon explains itself:** hovering over the icon while Secure Input hides the keys shows the same words as the Secure Input Is On card: who has it on, what stops working, and how to get the keys back.
+
 ## 1.33.0
 - **RubberMAC tells you when an app's Secure Input hides the keys, and which app.** While an app has Secure Input on, macOS hides the keys pressed with ⌘, Ctrl or Alt from RubberMAC, so window snapping, ⌘R, Ctrl-C/V and Alt-Tab stop working with no sign why. Now the menu-bar icon gets an orange "!", and a **Secure Input Is On** card at the top of the General and Keyboard pages names the app and says how to get the keys back, with a **Show** button that brings the app to the front. Both go away once Secure Input is off. The log says it once when it comes on and once when it goes off, instead of a line for every ⌘ press.
 - **Spotlight can search only apps.** **Spotlight Searches Only Apps**, on the Keyboard page, does what ⌘1 does in Spotlight's search bar (the tip from the MacRumors thread "Spotlight: anyone able to hide certain results?"), every time the bar opens: results are apps and nothing else, and the empty field reads "Applications". Esc goes back to searching everything, and the next time Spotlight opens it shows only apps again. Letters typed straight after the shortcut are kept: Spotlight would wipe the ones that reach it while it switches to apps, so RubberMAC holds them for that moment and passes them on in order. While another app holds Secure Input, macOS hides keys from RubberMAC and a very quick first letter can still be lost. Off until you turn it on.

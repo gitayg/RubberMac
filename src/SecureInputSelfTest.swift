@@ -71,6 +71,8 @@ extension SecureInput {
         let loginNotice = Notice.text(for: login)
         check(loginNotice.title == "A login window has Secure Input on" && loginNotice.button == nil
               && loginNotice.body.contains("Lock the screen and unlock it again"), "a login window gets its own fix and no button")
+        check(loginNotice.hoverText.hasPrefix(loginNotice.title + ". ") && loginNotice.hoverText.hasSuffix(loginNotice.body),
+              "the icon's tooltip says the same as the card, title then how to get the keys back")
         let unknownNotice = Notice.text(for: unknown)
         check(unknownNotice.title == "A background process (pid 812) has Secure Input on" && unknownNotice.button == nil,
               "an unnamed pid is said plainly, with no button (\(unknownNotice.title))")

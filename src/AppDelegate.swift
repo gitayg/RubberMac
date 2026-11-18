@@ -156,6 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         iconSecureInput = blocked
         let color = shown.flatMap(EyeCamera.rgb(for:)).map { NSColor(srgbRed: $0.0, green: $0.1, blue: $0.2, alpha: 1) }
         statusItem.button?.image = StatusIcon.image(eyeColor: color, secureInputHolder: blocked)
+        statusItem.button?.toolTip = SecureInputMonitor.shared.notice?.hoverText
     }
 
     private func setUpSecureInputNotice() {

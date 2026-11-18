@@ -10,6 +10,9 @@ extension SecureInput {
         let button: String?
 
         static let sectionTitle = "Secure Input Is On"
+
+        // The menu-bar icon's tooltip while its "!" is up: the same words as the card, so hovering says what it means.
+        var hoverText: String { "\(title). \(body)" }
         static let stops = "While it's on, macOS hides the keys pressed with ⌘, Ctrl or Alt from RubberMAC, so window "
             + "snapping, ⌘R, Ctrl-C/V, Alt-Tab and the other keys stop working."
 
