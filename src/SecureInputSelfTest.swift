@@ -215,6 +215,17 @@ extension SecureInput {
         check(monitor.notice?.title == "An app has Secure Input on"
               && log.last?.hasPrefix("secure input: on, held by an app RubberMAC couldn't name") == true,
               "a holder that can't be read still puts the notice up (\(log.last ?? "none"))")
+        let login = Holder(pid: 424, name: "loginwindow", bundleID: Holder.loginWindowBundleID)
+        holder = login
+        tick()
+        let said = (log.count, changes)
+        holder = Holder(pid: 424, name: nil, bundleID: nil)
+        tick()
+        let during = monitor.notice?.title
+        holder = login
+        tick()
+        check(monitor.holder == login && during == "A login window has Secure Input on" && log.count == said.0 && changes == said.1,
+              "one read that can't name the same pid keeps its name: no change of holder and back (\(log.suffix(2)), \(during ?? "no notice"))")
         check(delays == [SecureInputMonitor.recheckInterval], "each check is \(SecureInputMonitor.recheckInterval) s after the last (\(delays.sorted()))")
     }
 

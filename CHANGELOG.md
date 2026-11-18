@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.2
+- **Fixed: the Secure Input card no longer flickers to "a background process"** while the login window holds Secure Input. For a single check at a time, macOS's list of running apps sometimes didn't include the login window. For those 3 seconds the card and the icon's tooltip said a background process had Secure Input on and suggested quitting an app, and the log said the holder had changed and then changed back. The same process now keeps the name it was already known by.
+
 ## 1.33.1
 - **The "!" on the menu-bar icon explains itself:** hovering over the icon while Secure Input hides the keys shows the same words as the Secure Input Is On card: who has it on, what stops working, and how to get the keys back.
 

@@ -63,7 +63,7 @@ final class SecureInputMonitor {
     // From the keyboard tap (and the ⌘ tap that couldn't be told from ⌘ pressed with a key).
     func noteOn() {
         guard isWatching(), isOn() else { return }
-        let found = readHolder()
+        let found = Self.merged(readHolder(), into: holder)
         if !isShowing {
             isShowing = true
             holder = found
@@ -89,7 +89,7 @@ final class SecureInputMonitor {
             clear("secure input: off, keys pressed with ⌘, Ctrl or Alt are seen again")
             return
         }
-        let found = readHolder()
+        let found = Self.merged(readHolder(), into: holder)
         if found != holder {
             holder = found
             write("secure input: now held by \(Self.describe(found))")
@@ -109,6 +109,13 @@ final class SecureInputMonitor {
         guard !checkPending else { return }
         checkPending = true
         schedule(Self.recheckInterval) { [weak self] in self?.check() }
+    }
+
+    // The same pid is the same process, so what one read couldn't name is kept from the last. macOS's list of running
+    // apps was seen missing the login window for single reads, which logged a change of holder and, 3 s later, back.
+    static func merged(_ found: SecureInput.Holder?, into known: SecureInput.Holder?) -> SecureInput.Holder? {
+        guard let found, let known, found.pid == known.pid else { return found }
+        return SecureInput.Holder(pid: found.pid, name: found.name ?? known.name, bundleID: found.bundleID ?? known.bundleID)
     }
 
     static func describe(_ holder: SecureInput.Holder?) -> String {
