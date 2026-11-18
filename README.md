@@ -6,12 +6,15 @@ Recorded daily from GitHub's download count for each release file by `.github/wo
 
 | Day | .dmg in all | .zip in all | new .dmg | new .zip |
 |---|---:|---:|---:|---:|
+| 2026-11-18 | 16 | 14 | +1 | +1 |
 | 2026-11-17 | 15 | 13 | – | – |
 
-## By release, 2026-11-17
+## By release, 2026-11-18
 
 | Release | .dmg | .zip |
 |---|---:|---:|
+| v1.33.1 | 0 | 0 |
+| v1.33.0 | 1 | 1 |
 | v1.32.0 | 1 | 1 |
 | v1.31.0 | 2 | 1 |
 | v1.28.0 | 1 | 1 |
@@ -22,4 +25,4 @@ Recorded daily from GitHub's download count for each release file by `.github/wo
 | v1.23.0 | 1 | 1 |
 | v1.21.0 | 2 | 2 |
 | v1.20.0 | 2 | 1 |
-| **All** | **15** | **13** |
+| **All** | **16** | **14** |
