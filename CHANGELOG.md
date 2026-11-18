@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.33.3
+- **Fixed: the login window is named as one even on the first check.** 1.33.2 kept the name from the check before, but if macOS's list of running apps missed the login window right as Secure Input came on, the card started out blaming a background process for 3 seconds. RubberMAC now asks the kernel what the process is when that list has no entry for it, and the log no longer repeats "a login window" when the list catches up.
+
 ## 1.33.2
 - **Fixed: the Secure Input card no longer flickers to "a background process"** while the login window holds Secure Input. For a single check at a time, macOS's list of running apps sometimes didn't include the login window. For those 3 seconds the card and the icon's tooltip said a background process had Secure Input on and suggested quitting an app, and the log said the holder had changed and then changed back. The same process now keeps the name it was already known by.
 

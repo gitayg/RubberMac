@@ -69,7 +69,25 @@ enum SecureInput {
 
     static func holder() -> Holder? {
         guard let pid = holderPID() else { return nil }
-        let app = NSRunningApplication(processIdentifier: pid)
-        return Holder(pid: pid, name: app?.localizedName, bundleID: app?.bundleIdentifier)
+        return holder(pid: pid, app: NSRunningApplication(processIdentifier: pid), path: { executablePath(of: pid) })
+    }
+
+    static let loginWindowExecutable = "/System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow"
+
+    // macOS's list of running apps names it; when the list has no app for the pid (it was seen missing the login
+    // window for single reads), the kernel's executable for the pid still tells the login window apart.
+    static func holder(pid: pid_t, app: NSRunningApplication?, path: () -> String?) -> Holder {
+        Holder(pid: pid, name: app?.localizedName, bundleID: app?.bundleIdentifier ?? loginWindowID(running: path()))
+    }
+
+    // The executable the kernel has for a pid, nil when no process has it.
+    static func executablePath(of pid: pid_t) -> String? {
+        var path = [CChar](repeating: 0, count: Int(4 * MAXPATHLEN))
+        guard proc_pidpath(pid, &path, UInt32(path.count)) > 0 else { return nil }
+        return String(cString: path)
+    }
+
+    static func loginWindowID(running path: String?) -> String? {
+        path == loginWindowExecutable ? Holder.loginWindowBundleID : nil
     }
 }

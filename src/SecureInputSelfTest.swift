@@ -4,7 +4,8 @@ import Carbon.HIToolbox
 // --selftest secureinput: the Secure Input notice on made-up holders and states. Who it names, the words, the
 // keyboard tap's watcher (only ⌘, Ctrl and Alt, at most once a second, never changing an event), one log line per
 // episode, the notice on the General and Keyboard pages and the menu-bar badge. Reads nothing real but the cost of
-// IsSecureEventInputEnabled, posts no keys and shows nothing.
+// IsSecureEventInputEnabled and the kernel's executable for this process and the login window, posts no keys and
+// shows nothing.
 extension SecureInput {
     static func selfTestReport() -> String {
         var lines: [String] = []
@@ -19,6 +20,7 @@ extension SecureInput {
         let unknown = Holder(pid: 812, name: nil, bundleID: nil)
 
         namingChecks(check, teams: teams, login: login, unknown: unknown)
+        kernelChecks(check)
         registryChecks(check)
         noticeChecks(check, teams: teams, login: login, unknown: unknown)
         let cost = tapChecks(check)
@@ -41,6 +43,32 @@ extension SecureInput {
         check(unknown.displayName == "a background process (pid 812)" && !unknown.canBeShown,
               "a pid that's no running app says so (\(unknown.displayName))")
         check(unknown.logDescription == "pid 812, not a running app", "and the log says it plainly (\(unknown.logDescription))")
+    }
+
+    // When macOS's list of running apps has no app for the pid, the kernel still knows what it runs.
+    private static func kernelChecks(_ check: Check) {
+        check(loginWindowID(running: loginWindowExecutable) == Holder.loginWindowBundleID
+              && loginWindowID(running: "/usr/sbin/sshd") == nil && loginWindowID(running: nil) == nil,
+              "the login window's executable means the login window, and no other does")
+        func real(_ path: String?) -> String? { path.map { URL(fileURLWithPath: $0).resolvingSymlinksInPath().path } }
+        let mine = executablePath(of: getpid())
+        check(mine != nil && real(mine) == real(Bundle.main.executablePath), "the kernel gives this process's executable (\(mine ?? "none"))")
+        let gone = (1...99_999).reversed().first { kill(pid_t($0), 0) == -1 && errno == ESRCH }.map { pid_t($0) }
+        check(gone.map { executablePath(of: $0) == nil } == true, "and none for a pid no process has (\(gone.map(String.init) ?? "none free"))")
+        if let window = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == Holder.loginWindowBundleID }) {
+            let path = executablePath(of: window.processIdentifier)
+            check(path == loginWindowExecutable, "the running login window's executable is the one it's known by (\(path ?? "none"))")
+        } else {
+            check(false, "a login window is running")
+        }
+        let read = holder(pid: 424, app: nil, path: { loginWindowExecutable })
+        check(read.isLoginWindow && read.displayName == "a login window" && !read.canBeShown,
+              "a pid missing from the running apps but running loginwindow is the login window (\(read.logDescription))")
+        check(holder(pid: 812, app: nil, path: { "/usr/sbin/sshd" }) == Holder(pid: 812, name: nil, bundleID: nil),
+              "any other is still a background process")
+        var asked = false
+        let me = holder(pid: getpid(), app: NSRunningApplication.current, path: { asked = true; return nil })
+        check(me.bundleID == Bundle.main.bundleIdentifier && !asked, "a running app is named by macOS's list, without asking the kernel")
     }
 
     private static func registryChecks(_ check: Check) {
@@ -226,6 +254,18 @@ extension SecureInput {
         tick()
         check(monitor.holder == login && during == "A login window has Secure Input on" && log.count == said.0 && changes == said.1,
               "one read that can't name the same pid keeps its name: no change of holder and back (\(log.suffix(2)), \(during ?? "no notice"))")
+        on = false
+        tick()
+        on = true
+        holder = Holder(pid: 424, name: nil, bundleID: Holder.loginWindowBundleID)
+        monitor.noteOn()
+        let first = (log.last, monitor.notice?.title)
+        let lines = log.count
+        holder = login
+        tick()
+        check(first.0 == "secure input: on, held by a login window (pid 424); keys pressed with ⌘, Ctrl or Alt can't be seen"
+              && first.1 == "A login window has Secure Input on" && log.count == lines && monitor.holder == login,
+              "a first read only the kernel could name says a login window, and the next naming it again adds no line (\(log.suffix(2)))")
         check(delays == [SecureInputMonitor.recheckInterval], "each check is \(SecureInputMonitor.recheckInterval) s after the last (\(delays.sorted()))")
     }
 

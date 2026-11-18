@@ -69,10 +69,8 @@ final class SecureInputMonitor {
             holder = found
             write("secure input: on, held by \(Self.describe(found)); keys pressed with ⌘, Ctrl or Alt can't be seen")
             onChange()
-        } else if found != holder {
-            holder = found
-            write("secure input: now held by \(Self.describe(found))")
-            onChange()
+        } else {
+            take(found)
         }
         scheduleCheck()
     }
@@ -89,13 +87,18 @@ final class SecureInputMonitor {
             clear("secure input: off, keys pressed with ⌘, Ctrl or Alt are seen again")
             return
         }
-        let found = Self.merged(readHolder(), into: holder)
-        if found != holder {
-            holder = found
-            write("secure input: now held by \(Self.describe(found))")
-            onChange()
-        }
+        take(Self.merged(readHolder(), into: holder))
         scheduleCheck()
+    }
+
+    // A holder read while the notice is up. The log says so only when the words change: the login window named by
+    // the kernel and then by macOS's list of running apps is the same "a login window (pid 424)".
+    private func take(_ found: SecureInput.Holder?) {
+        guard found != holder else { return }
+        let said = Self.describe(holder)
+        holder = found
+        if Self.describe(found) != said { write("secure input: now held by \(Self.describe(found))") }
+        onChange()
     }
 
     private func clear(_ line: String) {
