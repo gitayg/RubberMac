@@ -211,6 +211,34 @@ Parts of `src/IrisRecolor.swift` are a Swift translation of OpenCV 4.11.0 (https
 
 ```
 
+## InstantSpaceSwitcher
+
+`src/DesktopSwipe.swift` is a Swift translation of the macOS 27 swipe in InstantSpaceSwitcher (https://github.com/jurplel/InstantSpaceSwitcher, `Sources/ISS/ISS.c` and `Sources/ISS/event_serialize.c`): the Dock swipe's events, their fields and the IOHID payload added to them. Licensed under the MIT License:
+
+```
+MIT License
+
+Copyright (c) 2026 jurplel
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ## Atkinson Hyperlegible Next
 
 The font files in `fonts/AtkinsonHyperlegibleNext/` (and in the app's `Contents/Resources/Fonts/AtkinsonHyperlegibleNext`) are Atkinson Hyperlegible Next by the Braille Institute, unmodified, from https://github.com/googlefonts/atkinson-hyperlegible-next at commit 7925f50f649b3813257faf2f4c0b381011f434f1 (`fonts/otf`). Licensed under the SIL Open Font License, Version 1.1; the licence also ships beside the fonts as `OFL.txt`.

@@ -9,6 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let altTab = AltTabRemap(switcher: WindowSwitcher())
     private let clipboard = ClipboardKeys()
     private let windowKeys = WindowKeys()
+    private let desktopKeys = DesktopKeys()
     private let textNav = TextNavKeys()
     private let minimizeAll = MinimizeAllKeys()
     private let spotlight = SpotlightKeys()
@@ -23,7 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // after clipboard, so a Ctrl-V reaches it as ⌘V. secureInputKeys, before them all, only watches ⌘, Ctrl and Alt.
     private lazy var keyboardTap = EventTap(name: "keyboard", types: [.keyDown, .keyUp, .flagsChanged],
                                             location: .cghidEventTap, ownThread: true,
-                                            handlers: secureInputKeys.watching([spotlight, inputSwitch, InputPerApp.shared.keys, dockPicker.keys, padKeys, windowKeys, minimizeAll, altTab, clipboard, finderPaste, finderTrash, textNav, SpotlightFilter.shared.keys]))
+                                            handlers: secureInputKeys.watching([spotlight, inputSwitch, InputPerApp.shared.keys, dockPicker.keys, padKeys, windowKeys, desktopKeys, minimizeAll, altTab, clipboard, finderPaste, finderTrash, textNav, SpotlightFilter.shared.keys]))
     let finderBar = FinderAddressBar()
     private let fullScreenDock = FullScreenDock()
     private lazy var pointerTap = EventTap(name: "pointer", types: [.mouseMoved, .leftMouseDown, .leftMouseUp, .leftMouseDragged],
@@ -101,6 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         clipboard.isEnabled = Settings.clipboardKeysEnabled
         textNav.isEnabled = Settings.textNavEnabled
         minimizeAll.isEnabled = Settings.minimizeAllEnabled
+        desktopKeys.isEnabled = Settings.desktopKeysEnabled
         spotlight.searchKeyEnabled = Settings.spotlightSearchKeyEnabled
         spotlight.appsKeyEnabled = Settings.spotlightAppsKeyEnabled
         let spotlightApps = spotlight.onApps
@@ -184,7 +186,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     var needsAccess: Bool {
         (Settings.snapEnabled || Settings.altTabMode != .off || Settings.clipboardKeysEnabled
-            || Settings.textNavEnabled || Settings.minimizeAllEnabled || Settings.spotlightSearchKeyEnabled || Settings.spotlightAppsKeyEnabled || Settings.inputSwitchEnabled || Settings.finderPathPasteEnabled || Settings.finderTrashKeyEnabled
+            || Settings.textNavEnabled || Settings.minimizeAllEnabled || Settings.desktopKeysEnabled || Settings.spotlightSearchKeyEnabled || Settings.spotlightAppsKeyEnabled || Settings.inputSwitchEnabled || Settings.finderPathPasteEnabled || Settings.finderTrashKeyEnabled
             || Settings.finderAddressBarEnabled || Settings.fullScreenDockEnabled || Settings.dockWindowMenuEnabled || Settings.writingPadEnabled || Settings.layoutsEnabled || Settings.wheelDragScrollEnabled || mice.wheelSpeed != 1
             || features.contains { $0.wantsAccess }) && !AX.isTrusted
     }
@@ -296,6 +298,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleMinimizeAll() {
         Settings.minimizeAllEnabled.toggle()
         minimizeAll.isEnabled = Settings.minimizeAllEnabled
+        keyboardTap.update()
+        if needsAccess { AX.requestAccess() }
+    }
+
+    @objc func toggleDesktopKeys() {
+        Settings.desktopKeysEnabled.toggle()
+        desktopKeys.isEnabled = Settings.desktopKeysEnabled
         keyboardTap.update()
         if needsAccess { AX.requestAccess() }
     }

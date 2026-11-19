@@ -46,6 +46,8 @@ if let i = args.firstIndex(of: "--selftest"), i + 1 < args.count {
     case "fonttargets": print(FontTargetsSelfTest.report())
     case "fonttargets-live": print(FontTargetsLiveSelfTest.report())
     case "spotlightkeys": print(SpotlightKeys.selfTestReport())
+    case "desktopkeys": print(DesktopKeys.selfTestReport())
+    case "desktopkeys-live": print(DesktopKeys.liveSelfTestReport())
     case "spotlightkeys-live": print(SpotlightKeys.liveSelfTestReport())
     case "spotlightfilter": print(SpotlightFilter.selfTestReport())
     case "spotlightfilter-live":

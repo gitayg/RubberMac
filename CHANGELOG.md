@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.34.0
+- **⌃⌘←/→ switches desktops, like Win+Ctrl+←/→ on Windows.** It goes to the desktop on the left or right, full-screen apps included, one per press, at once rather than sliding; at either end it does nothing. macOS 27 ignores its own ⌃←/→ when an app presses it, so RubberMAC sends the Dock a trackpad swipe instead (the way InstantSpaceSwitcher does), and never one past the last desktop, which on macOS 27 leaves the screen black for a while. Remote desktops and VMs keep the keys. On by default; a switch on the Keyboard page turns it off.
+
 ## 1.33.3
 - **Fixed: the login window is named as one even on the first check.** 1.33.2 kept the name from the check before, but if macOS's list of running apps missed the login window right as Secure Input came on, the card started out blaming a background process for 3 seconds. RubberMAC now asks the kernel what the process is when that list has no entry for it, and the log no longer repeats "a login window" when the list catches up.
 

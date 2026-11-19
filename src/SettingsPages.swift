@@ -248,6 +248,8 @@ extension AppDelegate {
                          note: "Everywhere but remote desktops, so ⌘R no longer reloads a web page or replies in Mail"),
             accessToggle("⌘ Alone Opens Apps, Like the Windows Key", #selector(toggleSpotlightAppsKey), on: Settings.spotlightAppsKeyEnabled, facts,
                          note: "Tap ⌘ and let go without pressing anything else"),
+            accessToggle("⌃⌘←/→ Switches Desktops, Like Win+Ctrl+←/→", #selector(toggleDesktopKeys), on: Settings.desktopKeysEnabled, facts,
+                         note: "One desktop or full-screen app per press; everywhere but remote desktops"),
         ]
         habits += startMenuRows(facts)
         habits += spotlightFilterRows(facts)

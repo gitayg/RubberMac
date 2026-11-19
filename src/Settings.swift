@@ -48,6 +48,7 @@ enum Settings {
             "minimizeAllEnabled": true,
             "spotlightSearchKeyEnabled": true,
             "spotlightAppsKeyEnabled": true,
+            "desktopKeysEnabled": true,
             "inputSwitchEnabled": true,
             "wheelSpeed": 1.0,
             "wheelDragScrollEnabled": true,
@@ -132,6 +133,11 @@ enum Settings {
     static var spotlightSearchKeyEnabled: Bool {
         get { defaults.bool(forKey: "spotlightSearchKeyEnabled") }
         set { defaults.set(newValue, forKey: "spotlightSearchKeyEnabled") }
+    }
+
+    static var desktopKeysEnabled: Bool {
+        get { defaults.bool(forKey: "desktopKeysEnabled") }
+        set { defaults.set(newValue, forKey: "desktopKeysEnabled") }
     }
 
     static var spotlightAppsKeyEnabled: Bool {
